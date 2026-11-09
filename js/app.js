@@ -6,14 +6,14 @@
         const TICKET_FLOW = ['Menunggu', 'Approval Manager Ops', 'Approval Finance', 'Dikirim', 'Diterima'];
         const TSTAT = {
             'Menunggu':             { label: 'Menunggu',             short: 'Menunggu',         cls: 'bg-amber-400/15 text-[#ffd65a] border-amber-400/30',    icon: 'fa-regular fa-clock' },
-            'Approval Manager Ops': { label: 'Approval Manager Ops', short: 'Approval Ops',     cls: 'bg-sky-500/15 text-[#7cc1ff] border-sky-400/30',        icon: 'fa-solid fa-user-check' },
+            'Approval Manager Ops': { label: 'Approval Ops',         short: 'Approval Ops',     cls: 'bg-sky-500/15 text-[#7cc1ff] border-sky-400/30',        icon: 'fa-solid fa-user-check' },
             'Approval Finance':     { label: 'Approval Finance',     short: 'Approval Finance', cls: 'bg-violet-500/15 text-violet-300 border-violet-400/30', icon: 'fa-solid fa-coins' },
             'Dikirim':              { label: 'Dikirim',              short: 'Dikirim',          cls: 'bg-orange-500/15 text-orange-300 border-orange-400/30', icon: 'fa-solid fa-truck-fast' },
             'Diterima':             { label: 'Diterima',             short: 'Diterima',         cls: 'bg-emerald-500/15 text-[#6ee7a0] border-emerald-400/30', icon: 'fa-regular fa-circle-check' },
             'Ditolak':              { label: 'Ditolak',              short: 'Ditolak',          cls: 'bg-rose-500/15 text-rose-300 border-rose-400/30',       icon: 'fa-solid fa-xmark' }
         };
         const PROSES = ['Approval Manager Ops', 'Approval Finance', 'Dikirim'];
-        const LEGACY_STATUS = { Pending: 'Menunggu', Approved: 'Approval Manager Ops', Completed: 'Diterima', Rejected: 'Ditolak' };
+        const LEGACY_STATUS = { Pending: 'Menunggu', Approved: 'Approval Manager Ops', Completed: 'Diterima', Rejected: 'Ditolak', Diproses: 'Approval Manager Ops', 'Approval Ops': 'Approval Manager Ops' };
         function normStatus(s) { return TSTAT[s] ? s : (LEGACY_STATUS[s] || 'Menunggu'); }
         function normReqs(list) { list.forEach(r => { r.status = normStatus(r.status); }); return list; }
         function statusMatch(st, f) { return !f || (f === 'PROSES' ? PROSES.includes(st) : st === f); }
@@ -811,9 +811,13 @@
         function updateMetrics() {
             const list = getAccessibleRequests();
             document.getElementById('metric-total').innerText = list.length;
-            document.getElementById('metric-pending').innerText = list.filter(r => r.status === 'Menunggu').length;
-            document.getElementById('metric-progress').innerText = list.filter(r => PROSES.includes(r.status)).length;
-            document.getElementById('metric-completed').innerText = list.filter(r => r.status === 'Diterima').length;
+            const cnt = st => list.filter(r => r.status === st).length;
+            document.getElementById('metric-pending').innerText = cnt('Menunggu');
+            document.getElementById('metric-ops').innerText = cnt('Approval Manager Ops');
+            document.getElementById('metric-finance').innerText = cnt('Approval Finance');
+            document.getElementById('metric-shipped').innerText = cnt('Dikirim');
+            document.getElementById('metric-completed').innerText = cnt('Diterima');
+            document.getElementById('metric-rejected').innerText = cnt('Ditolak');
             document.getElementById('metric-emergency').innerText = list.filter(r => r.urgency === 'Critical' || r.urgency === 'High').length;
             
             let tot = 0; list.forEach(r => r.items && r.items.forEach(i => tot += (i.qty * i.cost)));
