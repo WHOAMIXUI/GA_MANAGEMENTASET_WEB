@@ -298,7 +298,7 @@
                     <td>${esc(it.category || '-')}</td>
                     <td class="c"><b>${esc(String(it.qty || 1))}</b> ${esc(it.unit || '')}</td>
                     <td class="c">${esc(prio)}</td>
-                    <td class="c">${esc(it.itemStatus || 'Menunggu')}</td>
+                    <td style="text-align:right;white-space:nowrap">${esc(formatRupiah(Number(it.cost) || 0))}</td>
                 </tr>`).join('');
             const photos = items.filter(it => it.photo).map(it => `<figure><img src="${esc(it.photo)}" alt=""><figcaption>${esc(it.name)}</figcaption></figure>`).join('');
             const audit = (req.audit || []).map(a => `<li>${esc(a.timestamp)} &ndash; ${esc(a.actor)}: ${esc(a.action)}</li>`).join('');
@@ -319,7 +319,7 @@
                     ${req.justification ? `<h2>Keterangan</h2><div class="ps-box">${esc(req.justification)}</div>` : ''}
                     <h2>Rincian kerusakan</h2>
                     <table>
-                        <thead><tr><th class="c" style="width:28px">No</th><th>Item &amp; Deskripsi</th><th>Kategori</th><th class="c" style="width:62px">Qty</th><th class="c" style="width:70px">Prioritas</th><th class="c" style="width:70px">Status</th></tr></thead>
+                        <thead><tr><th class="c" style="width:28px">No</th><th>Item &amp; Deskripsi</th><th>Kategori</th><th class="c" style="width:62px">Qty</th><th class="c" style="width:70px">Prioritas</th><th style="width:90px;text-align:right">Harga</th></tr></thead>
                         <tbody>${rows || '<tr><td colspan="6" class="c">Tidak ada item.</td></tr>'}</tbody>
                     </table>
                     ${photos ? `<h2>Foto kerusakan</h2><div class="ps-photos">${photos}</div>` : ''}
