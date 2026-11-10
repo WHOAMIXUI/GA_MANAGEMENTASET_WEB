@@ -1,28 +1,3 @@
-        /* ---------- ALUR STATUS TIKET ----------
-           Menunggu > Approval Manager Ops > Approval Finance > Dikirim > Diterima   (+ Ditolak sebagai jalur keluar)
-           - GA Manager : boleh mengatur semua status (modal "Detail / Ubah").
-           - Staf cabang: HANYA boleh mengonfirmasi "Dikirim" -> "Diterima" untuk tiket cabangnya (tombol Terima).
-           - Data lama dikonversi otomatis: Pending->Menunggu, Approved->Approval Manager Ops, Completed->Diterima, Rejected->Ditolak. */
-        const TICKET_FLOW = ['Menunggu', 'Approval Manager Ops', 'Approval Finance', 'Dikirim', 'Diterima'];
-        const TSTAT = {
-            'Menunggu':             { label: 'Menunggu',             short: 'Menunggu',         cls: 'bg-amber-400/15 text-[#ffd65a] border-amber-400/30',    icon: 'fa-regular fa-clock' },
-            'Approval Manager Ops': { label: 'Approval Manager Ops', short: 'Approval Ops',     cls: 'bg-sky-500/15 text-[#7cc1ff] border-sky-400/30',        icon: 'fa-solid fa-user-check' },
-            'Approval Finance':     { label: 'Approval Finance',     short: 'Approval Finance', cls: 'bg-violet-500/15 text-violet-300 border-violet-400/30', icon: 'fa-solid fa-coins' },
-            'Dikirim':              { label: 'Dikirim',              short: 'Dikirim',          cls: 'bg-orange-500/15 text-orange-300 border-orange-400/30', icon: 'fa-solid fa-truck-fast' },
-            'Diterima':             { label: 'Diterima',             short: 'Diterima',         cls: 'bg-emerald-500/15 text-[#6ee7a0] border-emerald-400/30', icon: 'fa-regular fa-circle-check' },
-            'Ditolak':              { label: 'Ditolak',              short: 'Ditolak',          cls: 'bg-rose-500/15 text-rose-300 border-rose-400/30',       icon: 'fa-solid fa-xmark' }
-        };
-        const PROSES = ['Approval Manager Ops', 'Approval Finance', 'Dikirim'];
-        const LEGACY_STATUS = { Pending: 'Menunggu', Approved: 'Approval Manager Ops', Completed: 'Diterima', Rejected: 'Ditolak' };
-        function normStatus(s) { return TSTAT[s] ? s : (LEGACY_STATUS[s] || 'Menunggu'); }
-        function normReqs(list) { list.forEach(r => { r.status = normStatus(r.status); }); return list; }
-        function statusMatch(st, f) { return !f || (f === 'PROSES' ? PROSES.includes(st) : st === f); }
-        function canReceive(req) {
-            const u = getCurrentUser(); if (!u || !req || req.status !== 'Dikirim') return false;
-            const b = u.branches || [];
-            return u.role === 'General Affair Manager' || b.includes('ALL') || b.includes(req.branch);
-        }
-
         let appState = {
             activeTab: 'list',
             users: [], // diisi dari koleksi 'profiles' (khusus GA). TIDAK ADA sandi di sini.
@@ -38,7 +13,7 @@
                     branch: 'DONAT BAHAGIA CIBEUNYING',
                     submissionDate: '2026-10-20',
                     urgency: 'High',
-                    status: 'Menunggu',
+                    status: 'Pending',
                     justification: 'Penggantian showcase chiller yang rusak total',
                     gaNotes: '',
                     items: [
@@ -121,7 +96,7 @@
         let __renderFrame = 0;
         function scheduleRender() {
             if (__renderFrame) return;
-            __renderFrame = requestAnimationFrame(() => { __renderFrame = 0; if (window.NR) NR.sync(); applyTableFilters(); updateMetrics(); updateNotifications(); });
+            __renderFrame = requestAnimationFrame(() => { __renderFrame = 0; applyTableFilters(); updateMetrics(); updateNotifications(); });
         }
         
         function loadLocalState() { 
@@ -130,7 +105,7 @@
                 try { 
                     const parsed = JSON.parse(local);
                     if (parsed && parsed.length > 0) {
-                        appState.requests = normReqs(parsed); 
+                        appState.requests = parsed; 
                     }
                 } catch(e) {} 
             } 
@@ -174,7 +149,7 @@
                         const cloudData = [];
                         snapshot.forEach(docSnap => cloudData.push({ docId: docSnap.id, ...docSnap.data() }));
                         if (cloudData.length > 0) {
-                            appState.requests = normReqs(cloudData);
+                            appState.requests = cloudData;
                             saveLocalState();
                         }
                     }
@@ -286,9 +261,10 @@
             const logoEl = document.querySelector('#loginModal img[alt="Dobah"]') || document.querySelector('img[data-logo="full"]');
             const logo = logoEl ? logoEl.src : '';
             const items = req.items || [];
+            const TICKET_ST = { Pending: 'Menunggu', Approved: 'Diproses', Completed: 'Selesai', Rejected: 'Ditolak' };
             const PRIO = { Low: 'Rendah', Medium: 'Sedang', High: 'Tinggi', Critical: 'Darurat' };
             const prio = PRIO[req.urgency] || req.urgency || '-';
-            const tStatus = (TSTAT[req.status] || {}).label || req.status || '-';
+            const tStatus = TICKET_ST[req.status] || req.status || '-';
             const requester = ticketApplicant(req) || '-';
 
             const rows = items.map((it, i) => `
@@ -296,7 +272,6 @@
                     <td class="c">${i + 1}</td>
                     <td><b>${esc(it.name)}</b>${it.notes ? `<br><small>${esc(it.notes)}</small>` : ''}</td>
                     <td>${esc(it.category || '-')}</td>
-                    <td class="c"><b>${esc(String(it.qty || 1))}</b> ${esc(it.unit || '')}</td>
                     <td class="c">${esc(prio)}</td>
                     <td class="c">${esc(it.itemStatus || 'Menunggu')}</td>
                 </tr>`).join('');
@@ -319,8 +294,8 @@
                     ${req.justification ? `<h2>Keterangan</h2><div class="ps-box">${esc(req.justification)}</div>` : ''}
                     <h2>Rincian kerusakan</h2>
                     <table>
-                        <thead><tr><th class="c" style="width:28px">No</th><th>Item &amp; Deskripsi</th><th>Kategori</th><th class="c" style="width:62px">Qty</th><th class="c" style="width:70px">Prioritas</th><th class="c" style="width:70px">Status</th></tr></thead>
-                        <tbody>${rows || '<tr><td colspan="6" class="c">Tidak ada item.</td></tr>'}</tbody>
+                        <thead><tr><th class="c" style="width:28px">No</th><th>Item &amp; Deskripsi</th><th>Kategori</th><th class="c" style="width:70px">Prioritas</th><th class="c" style="width:70px">Status</th></tr></thead>
+                        <tbody>${rows || '<tr><td colspan="5" class="c">Tidak ada item.</td></tr>'}</tbody>
                     </table>
                     ${photos ? `<h2>Foto kerusakan</h2><div class="ps-photos">${photos}</div>` : ''}
                     ${audit ? `<h2>Riwayat aktivitas</h2><ul class="ps-hist">${audit}</ul>` : ''}
@@ -454,11 +429,11 @@
             
             let notifications = [];
             if(user.role === 'General Affair Manager') {
-                const pending = requests.filter(r => r.status === 'Menunggu');
-                if(pending.length > 0) notifications.push(`Ada ${pending.length} pengajuan berstatus Menunggu yang perlu diproses Anda.`);
+                const pending = requests.filter(r => r.status === 'Pending');
+                if(pending.length > 0) notifications.push(`Ada ${pending.length} pengajuan berstatus Pending menunggu proses Anda.`);
             } else {
-                const approved = requests.filter(r => ['Approval Manager Ops', 'Approval Finance', 'Dikirim', 'Diterima'].includes(r.status));
-                if(approved.length > 0) notifications.push(`Anda memiliki ${approved.length} pengajuan yang sedang diproses / sudah diterima.`);
+                const approved = requests.filter(r => r.status === 'Approved' || r.status === 'Completed');
+                if(approved.length > 0) notifications.push(`Anda memiliki ${approved.length} pengajuan yang disetujui/selesai.`);
             }
 
             if(notifications.length > 0) {
@@ -624,7 +599,7 @@
                 id: `ARQ-${new Date().getFullYear()}-${String(appState.requests.length+1).padStart(3,'0')}`, 
                 division: document.getElementById('formDivision').value, branch: document.getElementById('formBranch').value, 
                 submissionDate: document.getElementById('formSubmissionDate').value, urgency: document.getElementById('formUrgency').value, 
-                status: 'Menunggu', justification: document.getElementById('formJustification').value, gaNotes: '', items, audit: auditTrail
+                status: 'Pending', justification: document.getElementById('formJustification').value, gaNotes: '', items, audit: auditTrail
             };
 
             if (window.db) { try { await window.fbDeps.addDoc(window.fbDeps.collection(window.db, "requests"), p); } catch(err){ console.error("[Firestore] gagal tambah request:", err.code, err.message); } } 
@@ -692,7 +667,7 @@
             let filtered = getAccessibleRequests().filter(r => {
                 const hay = [r.id, ticketApplicant(r), r.division, r.branch, r.justification]
                     .concat((r.items || []).map(i => i.name)).join(' ').toLowerCase();
-                return (!q || hay.includes(q)) && (!b || r.branch === b) && statusMatch(r.status, s) && (!ticketUrgentOnly || r.urgency === 'Critical' || r.urgency === 'High');
+                return (!q || hay.includes(q)) && (!b || r.branch === b) && (!s || r.status === s) && (!ticketUrgentOnly || r.urgency === 'Critical' || r.urgency === 'High');
             });
 
             appState.pagination.filteredData = sortDataList(filtered);
@@ -719,27 +694,32 @@
             const role = getCurrentUser().role;
             const isGA = role === 'General Affair Manager';
 
-            const STAT = TSTAT;
+            const STAT = {
+                Pending:   { label: 'Menunggu', cls: 'bg-amber-400/15 text-[#ffd65a] border-amber-400/30',     icon: 'fa-regular fa-clock' },
+                Approved:  { label: 'Diproses', cls: 'bg-sky-500/15 text-[#7cc1ff] border-sky-400/30',         icon: 'fa-solid fa-arrows-rotate' },
+                Completed: { label: 'Selesai',  cls: 'bg-emerald-500/15 text-[#6ee7a0] border-emerald-400/30', icon: 'fa-regular fa-circle-check' },
+                Rejected:  { label: 'Ditolak',  cls: 'bg-rose-500/15 text-rose-300 border-rose-400/30',        icon: 'fa-solid fa-xmark' }
+            };
 
             pageData.forEach(req => {
                 const actIdx = appState.requests.indexOf(req);
                 const totalItemsCount = req.items ? req.items.length : 0;
                 let completedCount = req.items ? req.items.filter(i => i.itemStatus === 'Selesai').length : 0;
-                if (req.status === 'Diterima' && completedCount === 0) completedCount = totalItemsCount;
+                if (req.status === 'Completed' && completedCount === 0) completedCount = totalItemsCount;
                 const progressPercent = totalItemsCount > 0 ? Math.round((completedCount / totalItemsCount) * 100) : 0;
-                const st = STAT[req.status] || STAT['Menunggu'];
+                const st = STAT[req.status] || STAT.Approved;
 
                 let btns = isGA
                     ? `<button type="button" onclick="printRequest(${actIdx})" class="tk-print" title="Cetak form pengajuan" aria-label="Cetak form pengajuan"><i class="fa-solid fa-print text-[13px]"></i></button>
                        <button type="button" onclick="openEditModal(${actIdx})" class="tk-act">Detail / Ubah</button>
                        <button type="button" onclick="deleteRequest(${actIdx}, '${req.docId}')" class="tk-del" title="Hapus tiket" aria-label="Hapus tiket"><i class="fa-regular fa-trash-can text-[13px]"></i></button>`
                     : `<button type="button" onclick="printRequest(${actIdx})" class="tk-print" title="Cetak form pengajuan" aria-label="Cetak form pengajuan"><i class="fa-solid fa-print text-[13px]"></i></button>
-                       <button type="button" onclick="openDetailModal(${actIdx})" class="tk-act">Detail</button>${canReceive(req) ? `<button type="button" onclick="confirmReceived(${actIdx})" class="tk-recv" title="Konfirmasi barang sudah diterima"><i class="fa-solid fa-circle-check"></i> Terima</button>` : ''}`;
+                       <button type="button" onclick="openDetailModal(${actIdx})" class="tk-act">Detail</button>`;
 
                 tbody.innerHTML += `
-                    <tr class="transition-colors${(window.NR && NR.isNew(req)) ? ' tk-is-new' : ''}">
+                    <tr class="transition-colors">
                         <td class="p-4 pl-6 whitespace-nowrap">
-                            <a href="javascript:void(0)" onclick="openDetailModal(${actIdx})" class="tk-id" title="Lihat detail tiket">${esc(req.id)}</a>${(window.NR && NR.isNew(req)) ? '<span class="tk-new" title="Pengajuan baru, belum dibuka">BARU</span>' : ''}<br>
+                            <a href="javascript:void(0)" onclick="openDetailModal(${actIdx})" class="tk-id" title="Lihat detail tiket">${esc(req.id)}</a><br>
                             <span class="text-[11px] text-dobah-200/60 font-normal"><i class="fa-regular fa-calendar mr-1"></i>${esc(req.submissionDate)}</span>
                         </td>
                         <td class="p-4">
@@ -790,13 +770,13 @@
             const rows = appState.pagination.filteredData || [];
             if (!rows.length) { Swal.fire('Belum ada data', 'Tidak ada tiket yang bisa diekspor dengan filter saat ini.', 'info'); return; }
             const q = v => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
-            const label = Object.fromEntries(Object.keys(TSTAT).map(k => [k, TSTAT[k].label]));
+            const label = { Pending: 'Menunggu', Approved: 'Diproses', Completed: 'Selesai', Rejected: 'Ditolak' };
             const head = ['Kode Tiket', 'Tanggal', 'Pemohon', 'Divisi', 'Cabang', 'Jumlah Item', 'Item Selesai', 'Progress (%)', 'Status', 'Urgensi', 'Daftar Item'];
             const lines = [head.map(q).join(',')];
             rows.forEach(r => {
                 const items = r.items || [];
                 let done = items.filter(i => i.itemStatus === 'Selesai').length;
-                if (r.status === 'Diterima' && done === 0) done = items.length;
+                if (r.status === 'Completed' && done === 0) done = items.length;
                 const pct = items.length ? Math.round(done / items.length * 100) : 0;
                 lines.push([r.id, r.submissionDate, ticketApplicant(r), r.division, r.branch, items.length, done, pct,
                     label[r.status] || r.status, r.urgency, items.map(i => i.name).join('; ')].map(q).join(','));
@@ -811,9 +791,9 @@
         function updateMetrics() {
             const list = getAccessibleRequests();
             document.getElementById('metric-total').innerText = list.length;
-            document.getElementById('metric-pending').innerText = list.filter(r => r.status === 'Menunggu').length;
-            document.getElementById('metric-progress').innerText = list.filter(r => PROSES.includes(r.status)).length;
-            document.getElementById('metric-completed').innerText = list.filter(r => r.status === 'Diterima').length;
+            document.getElementById('metric-pending').innerText = list.filter(r => r.status === 'Pending').length;
+            document.getElementById('metric-progress').innerText = list.filter(r => r.status === 'Approved').length;
+            document.getElementById('metric-completed').innerText = list.filter(r => r.status === 'Completed').length;
             document.getElementById('metric-emergency').innerText = list.filter(r => r.urgency === 'Critical' || r.urgency === 'High').length;
             
             let tot = 0; list.forEach(r => r.items && r.items.forEach(i => tot += (i.qty * i.cost)));
@@ -872,13 +852,11 @@
         function openDetailModal(idx) {
             const req = appState.requests[idx]; if (!req) return;
             currentDetailIdx = idx;
-            if (window.NR) NR.mark(req);
             document.getElementById('detailReqId').innerText = `#${req.id}`;
             document.getElementById('detailDivision').innerText = req.division;
             document.getElementById('detailBranch').innerText = req.branch;
             document.getElementById('detailSubmissionDate').innerText = req.submissionDate;
-            document.getElementById('detailStatusBadge').innerText = `${(TSTAT[req.status] || {}).label || req.status} (${req.urgency})`;
-            renderTicketFlow(req);
+            document.getElementById('detailStatusBadge').innerText = `${req.status} (${req.urgency})`;
             document.getElementById('detailJustification').innerText = req.justification || '-';
 
             const tb = document.getElementById('detailItemsTableBody'); tb.innerHTML = ''; let tot = 0;
@@ -907,51 +885,10 @@
             openModal('detailModal');
         }
 
-        /* --- STEPPER STATUS + KONFIRMASI PENERIMAAN (staf cabang) --- */
-        function renderTicketFlow(req) {
-            const box = document.getElementById('detailFlow');
-            if (box) {
-                const cur = TICKET_FLOW.indexOf(req.status);
-                box.innerHTML = req.status === 'Ditolak'
-                    ? `<div class="fl-rejected"><i class="fa-solid fa-xmark"></i><span>Pengajuan ditolak${req.gaNotes ? ' — ' + esc(req.gaNotes) : ''}</span></div>`
-                    : `<ol class="fl">${TICKET_FLOW.map((k, i) => `<li class="fl-step ${i < cur ? 'is-done' : i === cur ? 'is-now' : ''}"><span class="fl-dot">${i < cur ? '<i class="fa-solid fa-check"></i>' : i + 1}</span><span class="fl-lbl">${esc(TSTAT[k].short)}</span></li>`).join('')}</ol>`;
-            }
-            const act = document.getElementById('detailActions');
-            if (act) act.innerHTML = canReceive(req)
-                ? `<button type="button" onclick="confirmReceived(currentDetailIdx)" class="modern-button bg-dobah-400 text-cocoa-950 text-xs font-bold px-4 py-2"><i class="fa-solid fa-circle-check mr-1.5"></i>Konfirmasi barang sudah diterima</button>`
-                : '';
-        }
-
-        async function confirmReceived(idx) {
-            const u = getCurrentUser(); const req = appState.requests[idx];
-            if (!u || !req) return;
-            if (req.status !== 'Dikirim') return Swal.fire('Info', 'Konfirmasi penerimaan hanya bisa dilakukan saat status Dikirim.', 'info');
-            if (!canReceive(req)) return Swal.fire('Akses Dibatasi', 'Hanya cabang terkait atau GA Manager yang bisa mengonfirmasi penerimaan.', 'warning');
-            const ok = await Swal.fire({ title: 'Barang sudah diterima?', text: `${req.id} · ${req.branch}. Pastikan semua item sudah diterima di cabang.`, icon: 'question', showCancelButton: true, confirmButtonText: 'Ya, sudah diterima', cancelButtonText: 'Batal', confirmButtonColor: '#f4a23a' });
-            if (!ok.isConfirmed) return;
-            const prev = { status: req.status, receivedAt: req.receivedAt, receivedBy: req.receivedBy, audit: (req.audit || []).slice() };
-            const when = new Date().toLocaleString('id-ID');
-            req.status = 'Diterima'; req.receivedAt = when; req.receivedBy = u.name;
-            req.audit = (req.audit || []).concat([{ actor: u.name, role: u.role, action: 'Konfirmasi penerimaan: Dikirim ➔ Diterima', timestamp: when }]);
-            if (window.db && req.docId) {
-                try {
-                    // hanya 4 field ini yang ditulis (sesuai aturan database untuk staf cabang)
-                    await window.fbDeps.setDoc(window.fbDeps.doc(window.db, 'requests', req.docId),
-                        { status: req.status, receivedAt: req.receivedAt, receivedBy: req.receivedBy, audit: req.audit }, { merge: true });
-                } catch (err) {
-                    Object.assign(req, prev); applyTableFilters(); updateMetrics();
-                    return Swal.fire('Gagal', 'Konfirmasi tidak tersimpan (tidak ada izin atau koneksi bermasalah). Coba lagi.', 'error');
-                }
-            } else { saveLocalState(); }
-            closeModal('detailModal'); applyTableFilters(); updateMetrics();
-            Swal.fire('Berhasil', 'Penerimaan barang tercatat.', 'success');
-        }
-
         /* --- EDIT MODAL DENGAN CARD ITEM & STATUS PER ITEM --- */
         function openEditModal(idx) {
             const u = getCurrentUser(); if (u.role !== 'General Affair Manager') return Swal.fire('Akses Dibatasi', 'Hanya GA Manager.', 'warning');
             const r = appState.requests[idx]; if (!r) return;
-            if (window.NR) NR.mark(r);
             document.getElementById('editReqDocId').value = idx;
             document.getElementById('editStatus').value = r.status; 
             document.getElementById('editUrgency').value = r.urgency; 
@@ -996,18 +933,18 @@
 
                     <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-1">
                         <div>
-                            <label class="lb-qty block text-[10px] uppercase font-bold text-dobah-200/60 mb-1">Qty & Satuan</label>
+                            <label class="block text-[10px] uppercase font-bold text-dobah-200/60 mb-1">Qty & Satuan</label>
                             <div class="flex space-x-1">
                                 <input type="number" min="1" required class="edit-item-qty w-16 glass-input px-2 py-1 text-xs text-center font-bold" value="${data ? data.qty : 1}">
                                 <input type="text" required class="edit-item-unit w-20 glass-input px-2 py-1 text-xs text-center font-bold" value="${data ? data.unit || 'Unit' : 'Unit'}">
                             </div>
                         </div>
                         <div>
-                            <label class="lb-cost block text-[10px] uppercase font-bold text-dobah-200/60 mb-1">Harga Satuan (Rp)</label>
+                            <label class="block text-[10px] uppercase font-bold text-dobah-200/60 mb-1">Harga Satuan (Rp)</label>
                             <input type="number" min="0" required class="edit-item-cost w-full glass-input px-2.5 py-1 text-xs font-bold font-mono" value="${data ? data.cost : 0}">
                         </div>
                         <div>
-                            <label class="lb-stat block text-[10px] uppercase font-bold text-dobah-400 mb-1">Status Item:</label>
+                            <label class="block text-[10px] uppercase font-bold text-dobah-400 mb-1">Status Item:</label>
                             <select class="edit-item-status w-full glass-input px-2.5 py-1 text-xs font-bold text-dobah-300">${statusItemOpts}</select>
                         </div>
                     </div>
@@ -1079,8 +1016,7 @@
             const oldStatus = req.status;
             const newStatus = document.getElementById('editStatus').value;
             
-            req.status = newStatus;
-            if (newStatus === 'Diterima' && oldStatus !== 'Diterima') { req.receivedAt = new Date().toLocaleString('id-ID'); req.receivedBy = usr.name; } 
+            req.status = newStatus; 
             req.urgency = document.getElementById('editUrgency').value; 
             req.gaNotes = document.getElementById('editGANotes').value;
 
