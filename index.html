@@ -19,7 +19,7 @@
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@600..700&family=Plus+Jakarta+Sans:wght@400..800&family=Fredoka:wght@500..700&display=swap" rel="stylesheet">
     
     <!-- FontAwesome Free 6.4.0 (hanya ikon yang dipakai; lisensi di header file CSS) -->
-    <link rel="stylesheet" href="css/fontawesome-subset.css?v=20261110b">
+    <link rel="stylesheet" href="css/fontawesome-subset.css">
     
     <!-- SweetAlert2 -->
     <script defer src="https://cdn.jsdelivr.net/npm/sweetalert2@11.26.25"></script>
@@ -30,11 +30,11 @@
     <!-- Firebase SDK (Modular v10.8.0) dengan onSnapshot -->
     <script type="module" src="js/firebase-init.js"></script>
 
-    <link rel="stylesheet" href="css/style.css?v=20261110b">
+    <link rel="stylesheet" href="css/style.css">
     <!-- Tailwind (hasil build; sengaja di paling bawah agar urutan cascade sama seperti saat memakai CDN) -->
-    <link rel="stylesheet" href="css/tailwind.css?v=20261110b">
+    <link rel="stylesheet" href="css/tailwind.css">
     <!-- Tema terang/gelap (harus terakhir agar bisa menimpa utilitas Tailwind) -->
-    <link rel="stylesheet" href="css/theme.css?v=20261110b">
+    <link rel="stylesheet" href="css/theme.css">
 </head>
 <body class="h-full overflow-hidden antialiased selection:bg-dobah-400 selection:text-slate-950">
 
@@ -256,8 +256,8 @@
         <!-- TAB 2: LIST & METRICS -->
         <section id="view-list" class="space-y-6">
 
-            <!-- Kartu ringkasan: total + 6 status + darurat -->
-            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <!-- 5 kartu ringkasan -->
+            <div class="grid grid-cols-2 lg:grid-cols-5 gap-4">
                 <div class="glass-panel tk-card" role="button" tabindex="0" onclick="openTicketList('')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openTicketList('')}">
                     <div class="flex justify-between items-start gap-2">
                         <span class="tk-label">Total Tiket</span>
@@ -275,37 +275,17 @@
                     </div>
                     <div>
                         <span id="metric-pending" class="tk-num text-[#ffd65a]">0</span>
-                        <p class="tk-sub">Menunggu respons</p>
+                        <p class="tk-sub">Menunggu Respons</p>
                     </div>
                 </div>
-                <div class="glass-panel tk-card" role="button" tabindex="0" onclick="openTicketList('Approval Manager Ops')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openTicketList('Approval Manager Ops')}">
+                <div class="glass-panel tk-card" role="button" tabindex="0" onclick="openTicketList('PROSES')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openTicketList('PROSES')}">
                     <div class="flex justify-between items-start gap-2">
-                        <span class="tk-label">Approval Ops</span>
-                        <div class="tk-ico bg-sky-500/15 text-[#7cc1ff] border-sky-400/25"><i class="fa-solid fa-user-check"></i></div>
+                        <span class="tk-label">Dalam Proses</span>
+                        <div class="tk-ico bg-sky-500/15 text-[#6fb7ff] border-sky-400/25"><i class="fa-solid fa-arrows-rotate"></i></div>
                     </div>
                     <div>
-                        <span id="metric-ops" class="tk-num text-[#7cc1ff]">0</span>
-                        <p class="tk-sub">Menunggu persetujuan Ops</p>
-                    </div>
-                </div>
-                <div class="glass-panel tk-card" role="button" tabindex="0" onclick="openTicketList('Approval Finance')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openTicketList('Approval Finance')}">
-                    <div class="flex justify-between items-start gap-2">
-                        <span class="tk-label">Approval Finance</span>
-                        <div class="tk-ico bg-violet-500/15 text-violet-300 border-violet-400/30"><i class="fa-solid fa-coins"></i></div>
-                    </div>
-                    <div>
-                        <span id="metric-finance" class="tk-num text-violet-300">0</span>
-                        <p class="tk-sub">Menunggu persetujuan Finance</p>
-                    </div>
-                </div>
-                <div class="glass-panel tk-card" role="button" tabindex="0" onclick="openTicketList('Dikirim')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openTicketList('Dikirim')}">
-                    <div class="flex justify-between items-start gap-2">
-                        <span class="tk-label">Dikirim</span>
-                        <div class="tk-ico bg-orange-500/15 text-orange-300 border-orange-400/30"><i class="fa-solid fa-truck-fast"></i></div>
-                    </div>
-                    <div>
-                        <span id="metric-shipped" class="tk-num text-orange-300">0</span>
-                        <p class="tk-sub">Barang dalam pengiriman</p>
+                        <span id="metric-progress" class="tk-num text-[#6fb7ff]">0</span>
+                        <p class="tk-sub">Approval &amp; pengiriman</p>
                     </div>
                 </div>
                 <div class="glass-panel tk-card" role="button" tabindex="0" onclick="openTicketList('Diterima')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openTicketList('Diterima')}">
@@ -318,17 +298,7 @@
                         <p class="tk-sub">Barang sudah diterima cabang</p>
                     </div>
                 </div>
-                <div class="glass-panel tk-card" role="button" tabindex="0" onclick="openTicketList('Ditolak')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openTicketList('Ditolak')}">
-                    <div class="flex justify-between items-start gap-2">
-                        <span class="tk-label">Ditolak</span>
-                        <div class="tk-ico bg-rose-500/15 text-rose-300 border-rose-400/30"><i class="fa-solid fa-xmark"></i></div>
-                    </div>
-                    <div>
-                        <span id="metric-rejected" class="tk-num text-rose-300">0</span>
-                        <p class="tk-sub">Pengajuan ditolak</p>
-                    </div>
-                </div>
-                <div class="glass-panel tk-card tk-alert" role="button" tabindex="0" onclick="openTicketList('', true)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openTicketList('', true)}">
+                <div class="glass-panel tk-card tk-alert col-span-2 lg:col-span-1" role="button" tabindex="0" onclick="openTicketList('', true)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openTicketList('', true)}">
                     <div class="flex justify-between items-start gap-2">
                         <span class="tk-label !text-white/90">Item Darurat/Tinggi</span>
                         <div class="tk-ico bg-white/20 text-white border-white/30"><i class="fa-solid fa-triangle-exclamation"></i></div>
@@ -677,7 +647,7 @@
                         <label class="block text-xs font-bold uppercase text-dobah-200/70 mb-1.5">Status Tiket Keseluruhan</label>
                         <select id="editStatus" class="w-full glass-input px-3 py-2 text-sm font-semibold">
                             <option value="Menunggu" class="bg-cocoa-900">1. Menunggu</option>
-                            <option value="Approval Manager Ops" class="bg-cocoa-900">2. Approval Ops</option>
+                            <option value="Approval Manager Ops" class="bg-cocoa-900">2. Approval Manager Ops</option>
                             <option value="Approval Finance" class="bg-cocoa-900">3. Approval Finance</option>
                             <option value="Dikirim" class="bg-cocoa-900">4. Dikirim</option>
                             <option value="Diterima" class="bg-cocoa-900">5. Diterima</option>
@@ -726,19 +696,19 @@
     </div>
 
     <!-- APPLICATION LOGIC -->
-    <script defer src="js/app.js?v=20261110b"></script>
-    <script defer src="js/new-requests.js?v=20261110b"></script>
-    <script defer src="js/aset/01-core.js?v=20261110b"></script>
-    <script defer src="js/aset/02-registry.js?v=20261110b"></script>
-    <script defer src="js/aset/03-vendors.js?v=20261110b"></script>
-    <script defer src="js/aset/04-market.js?v=20261110b"></script>
-    <script defer src="js/aset/05-incidents.js?v=20261110b"></script>
-    <script defer src="js/aset/06-actions.js?v=20261110b"></script>
-    <script defer src="js/aset/07-contacts.js?v=20261110b"></script>
-    <script defer src="js/aset/08-contacts-import.js?v=20261110b"></script>
-    <script defer src="js/aset/09-assets-import-disposal.js?v=20261110b"></script>
-    <script defer src="js/aset/10-integration.js?v=20261110b"></script>
-    <script defer src="js/aset/11-notifications.js?v=20261110b"></script>
+    <script defer src="js/app.js"></script>
+    <script defer src="js/new-requests.js"></script>
+    <script defer src="js/aset/01-core.js"></script>
+    <script defer src="js/aset/02-registry.js"></script>
+    <script defer src="js/aset/03-vendors.js"></script>
+    <script defer src="js/aset/04-market.js"></script>
+    <script defer src="js/aset/05-incidents.js"></script>
+    <script defer src="js/aset/06-actions.js"></script>
+    <script defer src="js/aset/07-contacts.js"></script>
+    <script defer src="js/aset/08-contacts-import.js"></script>
+    <script defer src="js/aset/09-assets-import-disposal.js"></script>
+    <script defer src="js/aset/10-integration.js"></script>
+    <script defer src="js/aset/11-notifications.js"></script>
 
 </body>
 </html>
