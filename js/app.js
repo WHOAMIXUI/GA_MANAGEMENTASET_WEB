@@ -96,7 +96,7 @@
         let __renderFrame = 0;
         function scheduleRender() {
             if (__renderFrame) return;
-            __renderFrame = requestAnimationFrame(() => { __renderFrame = 0; applyTableFilters(); updateMetrics(); updateNotifications(); });
+            __renderFrame = requestAnimationFrame(() => { __renderFrame = 0; if (window.NR) NR.sync(); applyTableFilters(); updateMetrics(); updateNotifications(); });
         }
         
         function loadLocalState() { 
@@ -717,9 +717,9 @@
                        <button type="button" onclick="openDetailModal(${actIdx})" class="tk-act">Detail</button>`;
 
                 tbody.innerHTML += `
-                    <tr class="transition-colors">
+                    <tr class="transition-colors${(window.NR && NR.isNew(req)) ? ' tk-is-new' : ''}">
                         <td class="p-4 pl-6 whitespace-nowrap">
-                            <a href="javascript:void(0)" onclick="openDetailModal(${actIdx})" class="tk-id" title="Lihat detail tiket">${esc(req.id)}</a><br>
+                            <a href="javascript:void(0)" onclick="openDetailModal(${actIdx})" class="tk-id" title="Lihat detail tiket">${esc(req.id)}</a>${(window.NR && NR.isNew(req)) ? '<span class="tk-new" title="Pengajuan baru, belum dibuka">BARU</span>' : ''}<br>
                             <span class="text-[11px] text-dobah-200/60 font-normal"><i class="fa-regular fa-calendar mr-1"></i>${esc(req.submissionDate)}</span>
                         </td>
                         <td class="p-4">
@@ -852,6 +852,7 @@
         function openDetailModal(idx) {
             const req = appState.requests[idx]; if (!req) return;
             currentDetailIdx = idx;
+            if (window.NR) NR.mark(req);
             document.getElementById('detailReqId').innerText = `#${req.id}`;
             document.getElementById('detailDivision').innerText = req.division;
             document.getElementById('detailBranch').innerText = req.branch;
@@ -889,6 +890,7 @@
         function openEditModal(idx) {
             const u = getCurrentUser(); if (u.role !== 'General Affair Manager') return Swal.fire('Akses Dibatasi', 'Hanya GA Manager.', 'warning');
             const r = appState.requests[idx]; if (!r) return;
+            if (window.NR) NR.mark(r);
             document.getElementById('editReqDocId').value = idx;
             document.getElementById('editStatus').value = r.status; 
             document.getElementById('editUrgency').value = r.urgency; 
