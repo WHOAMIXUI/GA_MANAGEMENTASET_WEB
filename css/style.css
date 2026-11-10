@@ -181,3 +181,43 @@ tr.tk-is-new { box-shadow: inset 3px 0 0 #f4a23a; background: linear-gradient(90
 @keyframes nrRing { 0% { box-shadow: 0 0 0 0 rgba(225,29,72,.55); } 70%, 100% { box-shadow: 0 0 0 7px rgba(225,29,72,0); } }
 @keyframes nrPop { 0% { transform: scale(.6); } 60% { transform: scale(1.35); } 100% { transform: scale(1); } }
 @media (prefers-reduced-motion: reduce) { .tk-new::before, .nr-badge, .nr-badge.nr-pop { animation: none; } }
+
+/* ---------- Alur status tiket: stepper, tombol Terima, filter yang bisa digeser ---------- */
+.tk-seg { max-width: 100%; overflow-x: auto; scrollbar-width: none; }
+.tk-seg::-webkit-scrollbar { display: none; }
+.tk-seg button { white-space: nowrap; }
+.fl { display: flex; align-items: flex-start; list-style: none; margin: 0; padding: .25rem 0 .5rem; overflow-x: auto; }
+.fl-step { flex: 1 1 0; min-width: 4.4rem; display: flex; flex-direction: column; align-items: center; gap: .35rem; position: relative; text-align: center; }
+.fl-step::before { content: ""; position: absolute; top: .8rem; left: -50%; width: 100%; height: 2px; background: rgba(255,255,255,.14); }
+.fl-step:first-child::before { display: none; }
+.fl-step.is-done::before, .fl-step.is-now::before { background: #f4a23a; }
+.fl-dot { position: relative; z-index: 1; width: 1.6rem; height: 1.6rem; border-radius: 50%; display: grid; place-items: center;
+  font-size: .7rem; font-weight: 800; background: #331d14; color: #edd5b3; border: 2px solid rgba(255,255,255,.14); }
+.fl-step.is-done .fl-dot { background: #f4a23a; color: #150a05; border-color: #f4a23a; }
+.fl-step.is-now .fl-dot { background: #fff3e0; color: #a75d22; border-color: #f4a23a; box-shadow: 0 0 0 4px rgba(244,162,58,.28); }
+.fl-lbl { font-size: .62rem; font-weight: 700; color: rgba(237,213,179,.65); line-height: 1.2; }
+.fl-step.is-now .fl-lbl { color: #f4a23a; }
+.fl-rejected { display: flex; align-items: center; gap: .5rem; padding: .6rem .8rem; border-radius: .6rem; background: rgba(244,63,94,.12);
+  border: 1px solid rgba(244,63,94,.32); color: #fda4af; font-size: .75rem; font-weight: 700; }
+.tk-recv { display: inline-flex; align-items: center; gap: .35rem; padding: .4rem .8rem; margin-left: .35rem; border-radius: .6rem;
+  font-size: .75rem; font-weight: 800; background: #f4a23a; color: #150a05; transition: filter .15s; }
+.tk-recv:hover { filter: brightness(1.08); }
+
+/* ---------- Kolom isian BERWARNA (modal Edit & Approval + form pengajuan) ----------
+   Tiap jenis data punya warna sendiri supaya cepat dikenali dan tidak terlewat:
+   nama = amber | kategori = ungu | jumlah & satuan = biru | harga = hijau | status = oranye | urgensi = pink */
+.edit-item-name, .item-name, .edit-item-category, .item-category, .edit-item-qty, .edit-item-unit, .item-qty, .item-unit,
+.edit-item-cost, .item-cost, .edit-item-status, .edit-item-notes, .item-notes, #editStatus, #editUrgency, #editGANotes {
+  border: 1.5px solid; font-weight: 700; }
+.edit-item-name, .item-name { background: rgba(244,162,58,.10); border-color: rgba(244,162,58,.60); color: #fff3e0; }
+.edit-item-category, .item-category { background: rgba(167,139,250,.11); border-color: rgba(167,139,250,.60); color: #e4dcff; }
+.edit-item-qty, .edit-item-unit, .item-qty, .item-unit { background: rgba(96,165,250,.12); border-color: rgba(96,165,250,.65); color: #d6e8ff; }
+.edit-item-cost, .item-cost { background: rgba(52,211,153,.10); border-color: rgba(52,211,153,.60); color: #d3f9e7; }
+.edit-item-status { background: rgba(244,162,58,.16); border-color: rgba(244,162,58,.75); color: #ffd9a0; font-weight: 800; }
+.edit-item-notes, .item-notes, #editGANotes { background: rgba(255,255,255,.05); border-color: rgba(237,213,179,.40); font-weight: 600; }
+#editStatus { background: rgba(244,162,58,.15); border: 2px solid rgba(244,162,58,.80); color: #ffe0b0; font-weight: 800; }
+#editUrgency { background: rgba(244,114,182,.11); border-color: rgba(244,114,182,.65); color: #ffd6ea; }
+.edit-item-row, .item-row { border-left: 4px solid #f4a23a; }
+.lb-qty, .lb-cost, .lb-stat { font-weight: 800; letter-spacing: .03em; }
+.lb-qty::before, .lb-cost::before, .lb-stat::before { content: ""; display: inline-block; width: .5rem; height: .5rem; border-radius: 50%; background: currentColor; margin-right: .4rem; vertical-align: .05em; }
+.lb-qty { color: #8ab8ff; } .lb-cost { color: #6ee7a0; } .lb-stat { color: #f4a23a; }
