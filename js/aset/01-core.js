@@ -24,7 +24,7 @@ const onLoan=a=>AM.loans.filter(l=>l.assetId===a.id&&!l.returnedAt).reduce((n,l)
 
 /* --- penyimpanan --- */
 function migrate(){let ch=false;AM.assets.forEach(a=>{if(a.assigned){const o=a.assigned;AM.loans.push({id:'LN-M'+Date.now().toString(36).toUpperCase()+AM.loans.length,assetId:a.id,qty:1,name:o.name,nik:o.nik||'',dept:o.dept||'',purpose:'',date:today(),due:o.due||'',returnedAt:'',retCond:'',retNote:''});a.assigned=null;ch=true}});return ch}
-function load(){try{const d=JSON.parse(localStorage.getItem(LS)||'null');if(d){AM.assets=d.assets||[];AM.vendors=d.vendors||[];AM.contacts=d.contacts||[];AM.life=d.life||{};AM.loans=d.loans||[];AM.market=d.market||[];AM.trades=d.trades||[];AM.incidents=d.incidents||[];migrate()}}catch(e){}if(!AM.vendors.length)AM.vendors=JSON.parse(JSON.stringify(DEF_VENDORS));AM.loaded=true}
+function load(){try{const d=JSON.parse(localStorage.getItem(LS)||'null');if(d){AM.assets=d.assets||[];AM.vendors=d.vendors||[];AM.contacts=d.contacts||[];AM.life=d.life||{};AM.loans=d.loans||[];AM.market=d.market||[];AM.trades=d.trades||[];AM.incidents=d.incidents||[];migrate()}}catch(e){}if(!AM.vendors.length)AM.vendors=JSON.parse(JSON.stringify(DEF_VENDORS));AM.loaded=true;if(window.AUD)AUD.rebase()}
 let wBusy=false,wDirty=false;
 const encU=new TextEncoder();
 function cloudWarn(msg){try{Swal.fire({toast:true,position:'top-end',icon:'error',title:'Gagal simpan ke cloud',text:msg,showConfirmButton:false,timer:8000})}catch(e){}}
@@ -38,7 +38,7 @@ async function doWrite(){const{setDoc,doc}=window.fbDeps,db=window.db;
   AM._rp=n;AM.cloudErr='';return true}
  catch(e){AM.cloudErr=String((e&&(e.code||e.message))||e||'tidak diketahui');console.error('Simpan cloud gagal:',e);return false}}
 async function cloudWrite(){if(wBusy){wDirty=true;return true}wBusy=true;let ok=true;try{do{wDirty=false;ok=await doWrite()}while(wDirty)}finally{wBusy=false}return ok}
-async function save(quiet){try{localStorage.setItem(LS,JSON.stringify({assets:AM.assets,vendors:AM.vendors,contacts:AM.contacts,life:AM.life,loans:AM.loans,market:AM.market,trades:AM.trades,incidents:AM.incidents}))}catch(e){console.warn('localStorage penuh',e)}
+async function save(quiet){if(window.AUD)AUD.capture();try{localStorage.setItem(LS,JSON.stringify({assets:AM.assets,vendors:AM.vendors,contacts:AM.contacts,life:AM.life,loans:AM.loans,market:AM.market,trades:AM.trades,incidents:AM.incidents}))}catch(e){console.warn('localStorage penuh',e)}
  let ok=true;if(window.db){ok=await cloudWrite();if(!ok&&!quiet)cloudWarn('Data baru hanya tersimpan di perangkat ini ('+AM.cloudErr+'). Coba lagi atau hubungi admin.')}
  renderActive();updateNotifications();return ok}
 AM.save=save;
@@ -48,7 +48,7 @@ function applyCloud(){clearTimeout(acT);acT=setTimeout(applyCloudNow,80)}
 function applyCloudNow(){const d=AM._main;if(!d)return;const n=d.parts||0;let as=(d.assets||[]).slice();
  for(let i=2;i<=n+1;i++){if(AM._pd[i]===undefined)return;as=as.concat(AM._pd[i])}
  AM.assets=as;AM.vendors=(d.vendors&&d.vendors.length)?d.vendors:AM.vendors;AM.contacts=Array.isArray(d.contacts)?d.contacts:(AM.contacts||[]);AM.life=d.life||{};AM.loans=d.loans||[];AM.market=d.market||[];AM.trades=d.trades||[];AM.incidents=d.incidents||[];
- const mg=migrate();try{localStorage.setItem(LS,JSON.stringify({assets:AM.assets,vendors:AM.vendors,contacts:AM.contacts,life:AM.life,loans:AM.loans,market:AM.market,trades:AM.trades,incidents:AM.incidents}))}catch(e){}
+ const mg=migrate();if(window.AUD)AUD.rebase();try{localStorage.setItem(LS,JSON.stringify({assets:AM.assets,vendors:AM.vendors,contacts:AM.contacts,life:AM.life,loans:AM.loans,market:AM.market,trades:AM.trades,incidents:AM.incidents}))}catch(e){}
  renderActive();updateNotifications();if(mg)save()}
 function subscribe(){if(AM.sub||!window.db)return;AM.sub=1;AM._pd={};AM._watch={};try{const{doc,onSnapshot}=window.fbDeps,db=window.db;
  onSnapshot(doc(db,'settings','asset_registry'),s=>{if(!s.exists())return;if(s.metadata&&s.metadata.hasPendingWrites)return;const d=s.data();AM._main=d;AM._rp=d.parts||0;
