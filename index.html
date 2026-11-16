@@ -5,6 +5,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" href="assets/img/logo.png">
+    <link rel="manifest" href="manifest.webmanifest">
+    <meta name="theme-color" content="#1b100c">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="GA Aset">
+    <link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png">
     <title>GA X DOBAH - Permintaan &amp; Manajemen Aset</title>
     
     
@@ -35,6 +42,7 @@
     <link rel="stylesheet" href="css/tailwind.css">
     <!-- Tema terang/gelap (harus terakhir agar bisa menimpa utilitas Tailwind) -->
     <link rel="stylesheet" href="css/theme.css">
+    <link rel="stylesheet" href="css/features.css">
 </head>
 <body class="h-full overflow-hidden antialiased selection:bg-dobah-400 selection:text-slate-950">
 
@@ -78,6 +86,9 @@
                     <button onclick="switchTab('amkt')" id="tab-amkt" class="nav-item w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-medium text-sm transition-all text-dobah-200/60 hover:bg-cocoa-900 hover:text-white"><i class="fa-solid fa-store w-4 text-center"></i> Jual Beli Antar Toko</button>
                     <button onclick="switchTab('aven')" id="tab-aven" class="nav-item w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-medium text-sm transition-all text-dobah-200/60 hover:bg-cocoa-900 hover:text-white"><i class="fa-solid fa-handshake w-4 text-center"></i> Manajemen Vendor</button>
                     <button onclick="switchTab('acon')" id="tab-acon" class="nav-item w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-medium text-sm transition-all text-dobah-200/60 hover:bg-cocoa-900 hover:text-white"><i class="fa-solid fa-address-book w-4 text-center"></i> Kontak Sales</button>
+                    <button onclick="switchTab('aopn')" id="tab-aopn" class="nav-item w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-medium text-sm transition-all text-dobah-200/60 hover:bg-cocoa-900 hover:text-white"><i class="fa-solid fa-list-check w-4 text-center"></i> Stock Opname</button>
+                    <button onclick="switchTab('aaud')" id="tab-aaud" class="nav-item w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-medium text-sm transition-all text-dobah-200/60 hover:bg-cocoa-900 hover:text-white"><i class="fa-solid fa-clock-rotate-left w-4 text-center"></i> Audit Log Aset</button>
+                    <button onclick="switchTab('abak')" id="tab-abak" class="nav-item w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-medium text-sm transition-all text-dobah-200/60 hover:bg-cocoa-900 hover:text-white"><i class="fa-solid fa-database w-4 text-center"></i> Backup &amp; Laporan</button>
                 </div>
 
                 <div id="nav-master-section" class="pt-5">
@@ -391,6 +402,9 @@
         <section id="view-amkt" class="hidden space-y-6"></section>
         <section id="view-aven" class="hidden space-y-6"></section>
         <section id="view-acon" class="hidden space-y-6"></section>
+        <section id="view-aopn" class="hidden space-y-6"></section>
+        <section id="view-aaud" class="hidden space-y-6"></section>
+        <section id="view-abak" class="hidden space-y-6"></section>
 
         <section id="view-master" class="hidden space-y-6">
             <div class="glass-panel p-5 border-l-4 border-l-dobah-400">
@@ -709,6 +723,13 @@
     <script defer src="js/aset/09-assets-import-disposal.js"></script>
     <script defer src="js/aset/10-integration.js"></script>
     <script defer src="js/aset/11-notifications.js"></script>
+    <script defer src="js/notify-config.js"></script>
+    <script defer src="js/aset/12-opname.js"></script>
+    <script defer src="js/aset/13-audit.js"></script>
+    <script defer src="js/aset/14-attachments.js"></script>
+    <script defer src="js/aset/15-backup-report.js"></script>
+    <script defer src="js/aset/16-notify-settings.js"></script>
+    <script defer src="js/pwa.js"></script>
 
 </body>
 </html>
