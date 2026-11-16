@@ -15,6 +15,7 @@ try {
         import(`https://www.gstatic.com/firebasejs/${V}/firebase-auth.js`)
     ]);
     const app = appMod.initializeApp(firebaseConfig);
+    window.fbApp = app;
 
     let db;
     try {
