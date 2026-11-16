@@ -1,0 +1,19 @@
+/* Gaya tambahan untuk fitur baru (opname, audit, lampiran, backup, PWA). Tidak perlu build Tailwind. */
+.ga-offline-bar{position:fixed;left:0;right:0;bottom:0;z-index:120;background:#b45309;color:#fff;font-size:12px;font-weight:700;text-align:center;padding:6px 12px;padding-bottom:calc(6px + env(safe-area-inset-bottom,0px))}
+.ga-offline-bar.hidden{display:none}
+.ga-count-row{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;padding:12px;border-radius:14px;background:rgba(21,10,5,.7);border:1px solid rgba(255,255,255,.06)}
+.ga-count-row.ga-diff-neg{border-color:rgba(251,113,133,.45)}
+.ga-count-row.ga-diff-pos{border-color:rgba(251,191,36,.45)}
+.ga-count-row.ga-done{border-color:rgba(52,211,153,.35)}
+.ga-stepper{display:flex;align-items:center;gap:6px}
+.ga-stepper button{width:40px;height:40px;border-radius:10px;background:#331d14;border:1px solid rgba(255,255,255,.1);color:#e1b782;font-weight:800;font-size:18px}
+.ga-stepper input{width:64px;height:40px;text-align:center;border-radius:10px;background:#150a05;border:1px solid rgba(255,255,255,.12);color:#fff;font-weight:800;font-family:'JetBrains Mono',monospace}
+.ga-chip{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:999px;font-size:11px;font-weight:700;border:1px solid rgba(255,255,255,.1);background:#331d14;color:#e1b782}
+.ga-chip.on{background:#f4a23a;color:#1b100c;border-color:#f4a23a}
+.ga-sticky-foot{position:sticky;bottom:0;z-index:5;padding:10px 0 calc(10px + env(safe-area-inset-bottom,0px));background:linear-gradient(to top,#1b100c 70%,transparent)}
+.ga-file-row{display:flex;gap:10px;align-items:center;justify-content:space-between;padding:10px;border-radius:12px;background:#150a05;text-align:left}
+.ga-bar{height:8px;border-radius:999px;background:#331d14;overflow:hidden}
+.ga-bar>span{display:block;height:100%;background:#f4a23a;transition:width .2s}
+/* utilitas yang belum ada di css/tailwind.css */
+.items-end{align-items:flex-end}.line-through{text-decoration-line:line-through}.max-h-56{max-height:14rem}.mb-4{margin-bottom:1rem}.py-8{padding-top:2rem;padding-bottom:2rem}
+.min-w-\[140px\]{min-width:140px}.min-w-\[160px\]{min-width:160px}
