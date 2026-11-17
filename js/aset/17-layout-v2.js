@@ -116,7 +116,9 @@
         chunk.forEach(o => { const s = S[o.kind]; if (o.t === 'del') { s.sync.delete(o.id); s.base.delete(o.id); } else { s.sync.set(o.r.id, o.j); s.base.set(o.r.id, JSON.parse(o.j)); } });
       }
       const sig = J(mainObj());
-      if (sig !== AM._msig) { await setDoc(doc(db, 'settings', 'asset_registry'), { ...JSON.parse(sig), ts: Date.now() }, { merge: true }); AM._msig = sig; }
+      // Dokumen pengaturan utama hanya boleh ditulis GA (lihat firestore.rules); staf cukup menulis catatan per cabangnya.
+      if (sig !== AM._msig && !isGA()) AM._msig = sig;
+      else if (sig !== AM._msig) { await setDoc(doc(db, 'settings', 'asset_registry'), { ...JSON.parse(sig), ts: Date.now() }, { merge: true }); AM._msig = sig; }
       AM.cloudErr = ''; return true;
     } catch (e) { AM.cloudErr = errOf(e); console.error('Simpan cloud gagal:', e); return false; }
   };
