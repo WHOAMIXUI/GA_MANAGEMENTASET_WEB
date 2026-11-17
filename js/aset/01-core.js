@@ -28,7 +28,7 @@ function load(){try{const d=JSON.parse(localStorage.getItem(LS)||'null');if(d){A
 let wBusy=false,wDirty=false;
 const encU=new TextEncoder();
 function cloudWarn(msg){try{Swal.fire({toast:true,position:'top-end',icon:'error',title:'Gagal simpan ke cloud',text:msg,showConfirmButton:false,timer:8000})}catch(e){}}
-async function doWrite(){if(AM.v2&&window.V2)return V2.write();const{setDoc,doc}=window.fbDeps,db=window.db;
+async function doWrite(){if(AM.v2&&window.V2)return V2.write();if(window.V2&&V2.guardV1&&!(await V2.guardV1()))return false;const{setDoc,doc}=window.fbDeps,db=window.db;
  try{const parts=[[]];let sz=0,lim=450000;
   for(const a of AM.assets){const l=encU.encode(JSON.stringify(a)).length+16;if(sz+l>lim&&parts[parts.length-1].length){parts.push([]);sz=0;lim=600000}parts[parts.length-1].push(a);sz+=l}
   const n=parts.length-1,old=AM._rp||0;
