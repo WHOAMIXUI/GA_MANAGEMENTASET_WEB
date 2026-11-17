@@ -28,7 +28,7 @@ function load(){try{const d=JSON.parse(localStorage.getItem(LS)||'null');if(d){A
 let wBusy=false,wDirty=false;
 const encU=new TextEncoder();
 function cloudWarn(msg){try{Swal.fire({toast:true,position:'top-end',icon:'error',title:'Gagal simpan ke cloud',text:msg,showConfirmButton:false,timer:8000})}catch(e){}}
-async function doWrite(){const{setDoc,doc}=window.fbDeps,db=window.db;
+async function doWrite(){if(AM.v2&&window.V2)return V2.write();const{setDoc,doc}=window.fbDeps,db=window.db;
  try{const parts=[[]];let sz=0,lim=450000;
   for(const a of AM.assets){const l=encU.encode(JSON.stringify(a)).length+16;if(sz+l>lim&&parts[parts.length-1].length){parts.push([]);sz=0;lim=600000}parts[parts.length-1].push(a);sz+=l}
   const n=parts.length-1,old=AM._rp||0;
@@ -45,12 +45,12 @@ AM.save=save;
 let acT=0;
 /* Beberapa halaman registry bisa masuk berurutan; digabung jadi satu kali proses + gambar ulang */
 function applyCloud(){clearTimeout(acT);acT=setTimeout(applyCloudNow,80)}
-function applyCloudNow(){const d=AM._main;if(!d)return;const n=d.parts||0;let as=(d.assets||[]).slice();
+function applyCloudNow(){if(AM.v2&&window.V2)return V2.apply();const d=AM._main;if(!d)return;const n=d.parts||0;let as=(d.assets||[]).slice();
  for(let i=2;i<=n+1;i++){if(AM._pd[i]===undefined)return;as=as.concat(AM._pd[i])}
  AM.assets=as;AM.vendors=(d.vendors&&d.vendors.length)?d.vendors:AM.vendors;AM.contacts=Array.isArray(d.contacts)?d.contacts:(AM.contacts||[]);AM.life=d.life||{};AM.loans=d.loans||[];AM.market=d.market||[];AM.trades=d.trades||[];AM.incidents=d.incidents||[];
  const mg=migrate();if(window.AUD)AUD.rebase();try{localStorage.setItem(LS,JSON.stringify({assets:AM.assets,vendors:AM.vendors,contacts:AM.contacts,life:AM.life,loans:AM.loans,market:AM.market,trades:AM.trades,incidents:AM.incidents}))}catch(e){}
  renderActive();updateNotifications();if(mg)save()}
-function subscribe(){if(AM.sub||!window.db)return;AM.sub=1;AM._pd={};AM._watch={};try{const{doc,onSnapshot}=window.fbDeps,db=window.db;
+function subscribe(){if(AM.sub||!window.db)return;AM.sub=1;AM._pd={};AM._watch={};if(window.V2)V2.watch();try{const{doc,onSnapshot}=window.fbDeps,db=window.db;
  onSnapshot(doc(db,'settings','asset_registry'),s=>{if(!s.exists())return;if(s.metadata&&s.metadata.hasPendingWrites)return;const d=s.data();AM._main=d;AM._rp=d.parts||0;
   for(let i=2;i<=AM._rp+1;i++){if(AM._watch[i])continue;AM._watch[i]=1;
    onSnapshot(doc(db,'settings','asset_registry_p'+i),ps=>{if(ps.metadata&&ps.metadata.hasPendingWrites)return;AM._pd[i]=ps.exists()?(ps.data().assets||[]):undefined;applyCloud()})}

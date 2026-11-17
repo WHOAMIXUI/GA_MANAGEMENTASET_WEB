@@ -50,6 +50,7 @@
       localStorage.setItem(LAST, String(Date.now())); Swal.close(); return d;
     } catch (e) { console.error(e); Swal.fire({ title: 'Backup gagal', text: e.message || '', icon: 'error', ...SW }); return null; }
   }
+  BKP.safety = downloadBackup;
   BKP.backup = async function () {
     if (!isGA()) return deny();
     const r = await Swal.fire({ title: 'Unduh Backup', ...SW, showCancelButton: true, confirmButtonText: 'Unduh', cancelButtonText: 'Batal',
@@ -213,6 +214,7 @@
       <div class="glass-panel p-5"><h3 class="text-sm font-bold text-white mb-1"><i class="fa-solid fa-print text-dobah-400 mr-2"></i>Laporan</h3>
         <p class="text-[11px] text-dobah-200/70 mb-3">PDF dibuat di browser. Pertama kali dipakai butuh internet untuk memuat pustaka PDF.</p>
         <div class="flex flex-wrap gap-2"><button onclick="BKP.monthly()" class="${pri}"><i class="fa-solid fa-file-contract mr-1"></i>Laporan Bulanan</button><button onclick="BKP.branchRecapPdf()" class="${sec}"><i class="fa-solid fa-map-location-dot mr-1"></i>Rekap Cabang (PDF)</button><button onclick="BKP.branchRecapCsv()" class="${sec}"><i class="fa-solid fa-file-csv mr-1"></i>Rekap Cabang (CSV)</button></div></div></div>
+      ${window.V2 ? V2.panel() : ''}
       <div class="glass-panel p-5 text-xs text-dobah-200/80"><b class="text-white">Yang tersimpan sekarang:</b> ${AM.assets.length} aset · ${(window.ATT ? ATT.count() : 0)} lampiran · ${AM.loans.length} peminjaman · ${AM.incidents.length} insiden · ${(appState.requests || []).length} pengajuan.</div>`;
   };
 
