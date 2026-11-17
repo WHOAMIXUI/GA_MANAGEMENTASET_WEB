@@ -32,7 +32,8 @@ try {
     window.fbDeps = {
         collection: fs.collection, getDocs: fs.getDocs, addDoc: fs.addDoc, setDoc: fs.setDoc,
         doc: fs.doc, deleteDoc: fs.deleteDoc, getDoc: fs.getDoc, onSnapshot: fs.onSnapshot,
-        query: fs.query, where: fs.where
+        query: fs.query, where: fs.where, writeBatch: fs.writeBatch,
+        deleteField: fs.deleteField, arrayUnion: fs.arrayUnion
     };
 
     const auth = au.getAuth(app);
