@@ -152,6 +152,21 @@
     renderActive(); updateNotifications(); if (mg) save();
   };
 
+  /* Pengaman: perangkat yang masih memakai layout lama (penanda ada di localStorage tiap perangkat) tidak boleh
+     menulis ke settings/asset_registry bila cloud sudah memakai layout baru; kalau tidak, data "tersimpan" tetapi
+     tidak pernah terbaca oleh pengguna lain. Mengembalikan true jika aman menulis cara lama. */
+  V2.guardV1 = async function () {
+    try {
+      const { doc, getDoc } = window.fbDeps, s = await getDoc(doc(window.db, 'settings', 'asset_layout'));
+      const v = s.exists() ? (s.data().v | 0) : 0;
+      if (v >= 2) {
+        setFlag(v >= 3 ? 3 : 2); AM.cloudErr = 'layout baru terdeteksi, aplikasi dimuat ulang. Ulangi penyimpanan setelah itu';
+        setTimeout(() => location.reload(), 1800); return false;
+      }
+      return true;
+    } catch (e) { AM.cloudErr = 'tidak bisa memeriksa layout (' + errOf(e) + ')'; return false; }
+  };
+
   V2.watch = function () {
     if (V2._w || !window.db) return; V2._w = 1;
     const { doc, onSnapshot, collection } = window.fbDeps, db = window.db;
@@ -162,7 +177,7 @@
       setFlag(lv);
       try { Swal.fire({ toast: true, position: 'top', icon: 'info', title: 'Penyimpanan data diperbarui. Memuat ulang...', showConfirmButton: false, timer: 1600, ...SW }); } catch (e) {}
       setTimeout(() => location.reload(), 1600);
-    }, () => {});
+    }, err => { console.error('Gagal membaca settings/asset_layout:', err); cloudWarn('Tidak bisa membaca penanda layout (' + errOf(err) + '). Perangkat ini bisa salah memakai layout lama. Periksa aturan Firestore untuk settings/asset_layout.'); });
     active().forEach(kind => {
       const st = S[kind];
       onSnapshot(collection(db, KINDS[kind].col), snap => {

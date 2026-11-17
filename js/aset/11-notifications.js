@@ -47,7 +47,7 @@ function mktDiff(st){if(!AM.market.length&&!st.mkt)return;const first=!st.mkt,nb
 function incDiff(st){if(!AM.incidents.length&&!st.inc)return;const first=!st.inc,nb={},me=user();
  AM.incidents.forEach(i=>{nb[i.id]=1;if(first||st.inc[i.id]||i.by===me.name)return;
   add({key:'in2|'+i.id,type:'ast-bad',level:i.kind==='lost'?'danger':'warn',tab:'ainc',title:i.kind==='lost'?'Aset dilaporkan hilang':'Aset dilaporkan rusak',msg:`${i.name} · ${i.qty} unit · ${i.branch||'-'} · ${KIND[i.kind][1]}`})});st.inc=nb}
-function periodic(){const d=ld(),R=getAccessibleRequests().filter(r=>r.status==='Pending');
+function periodic(){const d=ld(),R=getAccessibleRequests().filter(r=>r.status==='Menunggu');
  if(R.length){const age=r=>r.submissionDate?Math.max(0,Math.floor((new Date(d)-new Date(r.submissionDate))/864e5)):0,old=R.slice().sort((a,b)=>age(b)-age(a))[0],ag=age(old);
   add({key:'pend|'+d,type:'pend',level:ag>=2?'warn':'info',tab:'list',title:`${R.length} pengajuan menunggu proses`,msg:ag>=1?`Terlama ${ag} hari (${old.id} · ${old.branch})`:'Segera tinjau pengajuan yang masuk.'})}
  const act=AM.loans.filter(l=>!l.returnedAt&&l.due),nm=a=>a.slice(0,3).map(l=>l.name).join(', ')+(a.length>3?` +${a.length-3}`:''),
