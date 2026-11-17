@@ -508,9 +508,9 @@
             const divEl = document.getElementById('formDivision');
             const branchEl = document.getElementById('formBranch');
             const filtBranchEl = document.getElementById('filterBranch');
-            if (divEl) divEl.innerHTML = appState.divisions.map(d => `<option value="${d}" class="bg-cocoa-900">${d}</option>`).join('');
-            if (branchEl) branchEl.innerHTML = ub.map(b => `<option value="${b}" class="bg-cocoa-900">${b}</option>`).join('');
-            if (filtBranchEl) filtBranchEl.innerHTML = `<option value="" class="bg-cocoa-900">Semua Cabang (Akses)</option>` + ub.map(b => `<option value="${b}" class="bg-cocoa-900">${b}</option>`).join('');
+            if (divEl) divEl.innerHTML = appState.divisions.map(d => `<option value="${esc(d)}" class="bg-cocoa-900">${esc(d)}</option>`).join('');
+            if (branchEl) branchEl.innerHTML = ub.map(b => `<option value="${esc(b)}" class="bg-cocoa-900">${esc(b)}</option>`).join('');
+            if (filtBranchEl) filtBranchEl.innerHTML = `<option value="" class="bg-cocoa-900">Semua Cabang (Akses)</option>` + ub.map(b => `<option value="${esc(b)}" class="bg-cocoa-900">${esc(b)}</option>`).join('');
         }
 
         /* --- FORM HANDLING --- */
@@ -885,7 +885,7 @@
             if(req.items) {
                 req.items.forEach((item, i) => {
                     const sub = item.qty * item.cost; tot += sub;
-                    tb.innerHTML += `<tr><td class="p-2 border border-white/10 text-center">${i+1}</td><td class="p-2 border border-white/10 font-bold text-white">${item.name}<br><span class="text-[9px] text-dobah-200/50">${item.category} ${item.notes?'• '+item.notes:''}</span></td><td class="p-2 border border-white/10 text-center text-dobah-200">${item.qty} ${item.unit}</td><td class="p-2 border border-white/10 text-right text-dobah-200">${formatRupiah(item.cost)}</td><td class="p-2 border border-white/10 text-right font-bold text-white">${formatRupiah(sub)}</td></tr>`;
+                    tb.innerHTML += `<tr><td class="p-2 border border-white/10 text-center">${i+1}</td><td class="p-2 border border-white/10 font-bold text-white">${esc(item.name)}<br><span class="text-[9px] text-dobah-200/50">${esc(item.category)} ${item.notes?'• '+esc(item.notes):''}</span></td><td class="p-2 border border-white/10 text-center text-dobah-200">${esc(item.qty)} ${esc(item.unit)}</td><td class="p-2 border border-white/10 text-right text-dobah-200">${formatRupiah(item.cost)}</td><td class="p-2 border border-white/10 text-right font-bold text-white">${formatRupiah(sub)}</td></tr>`;
                 });
             }
             document.getElementById('detailTotalBudget').innerText = formatRupiah(tot);
@@ -893,13 +893,13 @@
             const pc = document.getElementById('detailPhotosContainer'); pc.innerHTML = '';
             if(req.items) {
                 req.items.filter(i => i.photo).forEach(item => {
-                    pc.innerHTML += `<div class="cursor-pointer border border-white/10 p-1 rounded bg-cocoa-900 shadow-sm" onclick="openZoomImage('${item.photo}')"><img src="${item.photo}" class="w-12 h-12 object-cover rounded"><span class="text-[8px] font-mono font-bold block text-center mt-0.5 truncate w-12 text-dobah-200/60">${item.name}</span></div>`;
+                    pc.innerHTML += `<div class="cursor-pointer border border-white/10 p-1 rounded bg-cocoa-900 shadow-sm" data-src="${esc(item.photo)}" onclick="openZoomImage(this.dataset.src)"><img src="${esc(item.photo)}" class="w-12 h-12 object-cover rounded"><span class="text-[8px] font-mono font-bold block text-center mt-0.5 truncate w-12 text-dobah-200/60">${esc(item.name)}</span></div>`;
                 });
             }
 
             const auditUl = document.getElementById('detailAuditTrail');
             if (req.audit && req.audit.length > 0) {
-                auditUl.innerHTML = req.audit.map(a => `<li><span class="font-bold text-dobah-100">${a.timestamp}</span> - ${a.actor} (${a.role}) : <span class="italic">${a.action}</span></li>`).join('');
+                auditUl.innerHTML = req.audit.map(a => `<li><span class="font-bold text-dobah-100">${esc(a.timestamp)}</span> - ${esc(a.actor)} (${esc(a.role)}) : <span class="italic">${esc(a.action)}</span></li>`).join('');
             } else {
                 auditUl.innerHTML = `<li class="italic text-dobah-300/50">Tidak ada riwayat.</li>`;
             }
@@ -981,7 +981,7 @@
                     <div class="flex justify-between items-center border-b border-white/5 pb-2">
                         <div class="flex items-center space-x-2">
                             <span class="font-mono font-black text-xs text-white">#${num || currentCount}.</span>
-                            <input type="text" required class="edit-item-name glass-input px-2.5 py-1 text-xs font-bold text-white w-48" value="${data ? data.name : ''}" placeholder="Nama Item...">
+                            <input type="text" required class="edit-item-name glass-input px-2.5 py-1 text-xs font-bold text-white w-48" value="${data ? esc(data.name) : ''}" placeholder="Nama Item...">
                             <span class="text-[10px] font-bold px-2 py-0.5 rounded border ${urgBadgeColor}">${itemStat}</span>
                         </div>
                         <div class="flex items-center space-x-2">
@@ -991,7 +991,7 @@
                     </div>
                     
                     <div>
-                        <input type="text" placeholder="Catatan spesifikasi / keterangan item..." class="edit-item-notes w-full glass-input px-3 py-1.5 text-xs" value="${data ? data.notes || '' : ''}">
+                        <input type="text" placeholder="Catatan spesifikasi / keterangan item..." class="edit-item-notes w-full glass-input px-3 py-1.5 text-xs" value="${data ? esc(data.notes || '') : ''}">
                     </div>
 
                     <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-1">
@@ -1038,7 +1038,7 @@
             const box = row.querySelector('.edit-photo-preview');
             if (!photo) { box.textContent = 'Belum ada foto'; return; }
             const kb = Math.round(photo.length * 0.75 / 1024);
-            box.innerHTML = `<img src="${photo}" alt="Foto item" class="w-12 h-12 rounded-lg object-cover border border-white/10 shrink-0 cursor-pointer" onclick="openZoomImage(document.getElementById('${rid}').querySelector('.edit-item-photo').value)"><span class="text-dobah-400 font-bold truncate">✓ Foto tersimpan (${kb} KB)</span><button type="button" onclick="clearEditPhoto('${rid}')" class="text-rose-400 hover:text-rose-300 text-xs shrink-0 px-1" aria-label="Hapus foto"><i class="fa-solid fa-xmark"></i></button>`;
+            box.innerHTML = `<img src="${esc(photo)}" alt="Foto item" class="w-12 h-12 rounded-lg object-cover border border-white/10 shrink-0 cursor-pointer" onclick="openZoomImage(document.getElementById('${rid}').querySelector('.edit-item-photo').value)"><span class="text-dobah-400 font-bold truncate">✓ Foto tersimpan (${kb} KB)</span><button type="button" onclick="clearEditPhoto('${rid}')" class="text-rose-400 hover:text-rose-300 text-xs shrink-0 px-1" aria-label="Hapus foto"><i class="fa-solid fa-xmark"></i></button>`;
         }
 
         async function handleEditPhoto(input, rid) {
@@ -1133,10 +1133,10 @@
         /* --- MASTER DATA LOGIC --- */
         function renderMasterDataView() {
             const tb = document.getElementById('masterUserTableBody'); if (!tb) return;
-            tb.innerHTML = appState.users.map((u, i) => `<tr class="hover:bg-white/[0.02]"><td class="p-3 border border-white/5 font-bold text-white">${u.name}</td><td class="p-3 border border-white/5 text-dobah-400 font-mono">${u.role}</td><td class="p-3 border border-white/5 text-dobah-100 font-medium">${u.branches.includes('ALL')?'All Branches':u.branches.join(', ')}</td><td class="p-3 border border-white/5 text-center"><button onclick="promptEditUser(${i})" class="modern-button bg-cocoa-800 hover:bg-cocoa-900 text-dobah-300 p-1.5 px-2.5 mr-1 border border-white/5 text-xs"><i class="fa-solid fa-pen"></i></button>${u.username!=='admin'?`<button onclick="deleteUserAccount(${i})" class="modern-button bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 p-1.5 px-2.5 border border-rose-500/20 text-xs"><i class="fa-solid fa-trash"></i></button>`:''}</td></tr>`).join('');
+            tb.innerHTML = appState.users.map((u, i) => `<tr class="hover:bg-white/[0.02]"><td class="p-3 border border-white/5 font-bold text-white">${esc(u.name)}</td><td class="p-3 border border-white/5 text-dobah-400 font-mono">${esc(u.role)}</td><td class="p-3 border border-white/5 text-dobah-100 font-medium">${u.branches.includes('ALL')?'All Branches':esc(u.branches.join(', '))}</td><td class="p-3 border border-white/5 text-center"><button onclick="promptEditUser(${i})" class="modern-button bg-cocoa-800 hover:bg-cocoa-900 text-dobah-300 p-1.5 px-2.5 mr-1 border border-white/5 text-xs"><i class="fa-solid fa-pen"></i></button>${u.username!=='admin'?`<button onclick="deleteUserAccount(${i})" class="modern-button bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 p-1.5 px-2.5 border border-rose-500/20 text-xs"><i class="fa-solid fa-trash"></i></button>`:''}</td></tr>`).join('');
             ['categories','divisions','branches'].forEach(k => {
                 const el = document.getElementById('masterList' + k.charAt(0).toUpperCase() + k.slice(1));
-                if(el) el.innerHTML = appState[k].map((item, idx) => `<div class="flex items-center justify-between bg-cocoa-900/60 p-3 rounded-xl border border-white/10 text-xs font-semibold text-dobah-100"><span>${item}</span><button onclick="deleteMasterItem('${k}', ${idx})" class="text-rose-400 hover:text-rose-300 px-1 font-black">&times;</button></div>`).join('');
+                if(el) el.innerHTML = appState[k].map((item, idx) => `<div class="flex items-center justify-between bg-cocoa-900/60 p-3 rounded-xl border border-white/10 text-xs font-semibold text-dobah-100"><span>${esc(item)}</span><button onclick="deleteMasterItem('${k}', ${idx})" class="text-rose-400 hover:text-rose-300 px-1 font-black">&times;</button></div>`).join('');
             });
             const ce = document.getElementById('masterListContactTypes');
             if (ce) ce.innerHTML = (appState.contactTypes || []).map(t => `<div class="flex items-center justify-between bg-cocoa-900/60 p-3 rounded-xl border border-white/10 text-xs font-semibold text-dobah-100"><span>${esc(t.label)}</span><span class="flex items-center gap-1"><button onclick="promptEditContactType('${t.id}')" title="Ubah nama" class="text-dobah-300 hover:text-white px-1"><i class="fa-solid fa-pen text-[11px]"></i></button><button onclick="deleteContactType('${t.id}')" title="Hapus" class="text-rose-400 hover:text-rose-300 px-1 font-black">&times;</button></span></div>`).join('') || '<p class="text-xs italic text-dobah-200/50">Belum ada jenis. Klik Tambah.</p>';
@@ -1182,7 +1182,7 @@
 
         function renderBranchCheckboxes(sel=[]) {
             const c = document.getElementById('branchCheckboxesContainer'); if (!c) return;
-            c.innerHTML = appState.branches.map(b => `<label class="flex items-center space-x-2.5 cursor-pointer text-dobah-200 hover:text-white"><input type="checkbox" value="${b}" ${sel.includes('ALL')||sel.includes(b)?'checked':''} class="branch-checkbox w-4 h-4 text-dobah-400 rounded border-white/20 bg-cocoa-900"><span>${b}</span></label>`).join('');
+            c.innerHTML = appState.branches.map(b => `<label class="flex items-center space-x-2.5 cursor-pointer text-dobah-200 hover:text-white"><input type="checkbox" value="${esc(b)}" ${sel.includes('ALL')||sel.includes(b)?'checked':''} class="branch-checkbox w-4 h-4 text-dobah-400 rounded border-white/20 bg-cocoa-900"><span>${esc(b)}</span></label>`).join('');
         }
         function toggleBranchCheckboxesByRole() {
             const r = document.getElementById('userFormRole').value;
