@@ -55,8 +55,8 @@ function periodic(){const d=ld(),R=getAccessibleRequests().filter(r=>r.status===
  if(late.length)add({key:'ll|'+d,type:'loan',level:'danger',tab:'aasg',title:`${late.length} peminjaman lewat batas kembali`,msg:nm(late)});
  if(t0.length)add({key:'l0|'+d,type:'loan',level:'warn',tab:'aasg',title:`${t0.length} peminjaman jatuh tempo hari ini`,msg:nm(t0)});
  if(t1.length)add({key:'l1|'+d,type:'loan',level:'info',tab:'aasg',title:`${t1.length} peminjaman jatuh tempo besok`,msg:nm(t1)});
- AM.vendors.forEach(v=>{if(!v.expiry)return;const dd=days(v.expiry),b=dd<0?'exp':dd<=7?'7':dd<=14?'14':dd<=30?'30':null;
-  if(b)add({key:`vd|${v.id}|${b}`,type:'vendor',level:dd<=7?'danger':'warn',tab:'aven',title:dd<0?'Kontrak vendor sudah berakhir':'Kontrak vendor segera berakhir',msg:`${v.name} · ${dd<0?'berakhir '+(-dd)+' hari lalu':dd+' hari lagi'} (${v.expiry})`})});
+ AM.vendors.concat(AM.contacts.filter(c=>c.kontrak==='contract')).forEach(v=>{if(!v.expiry)return;const dd=days(v.expiry),b=dd<0?'exp':dd<=7?'7':dd<=14?'14':dd<=30?'30':null;
+  if(b)add({key:`vd|${v.id}|${b}`,type:'vendor',level:dd<=7?'danger':'warn',tab:'aven',title:dd<0?'Kontrak vendor/sales sudah berakhir':'Kontrak vendor/sales segera berakhir',msg:`${v.name} · ${dd<0?'berakhir '+(-dd)+' hari lalu':dd+' hari lagi'} (${v.expiry})`})});
  const ms=mine().filter(a=>a.mtcDate===d&&(a.status==='Maintenance'||a.status==='Broken'));
  if(ms.length)add({key:'mt|'+d,type:'mtc',level:'info',tab:'amtc',title:`${ms.length} jadwal servis hari ini`,msg:ms.slice(0,3).map(a=>a.name).join(', ')});
  const br=mine().filter(a=>a.status==='Broken');if(br.length)add({key:'br|'+d,type:'ast-bad',level:'danger',tab:'amtc',title:`${sq(br)} unit aset rusak belum ditangani`,msg:'Jadwalkan servis ke vendor.'});
