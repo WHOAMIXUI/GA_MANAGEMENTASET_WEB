@@ -3,7 +3,7 @@
 <head>
     <script src="js/theme.js"></script>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <link rel="icon" href="assets/img/logo.png">
     <link rel="manifest" href="manifest.webmanifest">
     <meta name="theme-color" content="#1b100c">
@@ -43,6 +43,8 @@
     <!-- Tema terang/gelap (harus terakhir agar bisa menimpa utilitas Tailwind) -->
     <link rel="stylesheet" href="css/theme.css">
     <link rel="stylesheet" href="css/features.css">
+    <!-- Tampilan mobile (layar <= 767px): bottom navigation, kartu, bottom-sheet -->
+    <link rel="stylesheet" href="css/mobile.css">
 </head>
 <body class="h-full overflow-hidden antialiased selection:bg-dobah-400 selection:text-slate-950">
 
@@ -751,6 +753,7 @@
     <script defer src="js/aset/16-notify-settings.js"></script>
     <script defer src="js/aset/17-layout-v2.js"></script>
     <script defer src="js/pwa.js"></script>
+    <script defer src="js/mobile.js"></script>
 
 </body>
 </html>
