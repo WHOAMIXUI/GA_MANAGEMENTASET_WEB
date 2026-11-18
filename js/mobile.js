@@ -139,7 +139,16 @@
       const cells = [...tr.children];
       if (cells.some(c => (c.colSpan || 1) > 1) || cells.length !== labels.length) { tr.classList.add('mb-span'); return; }
       tr.classList.remove('mb-span');
-      cells.forEach((c, i) => { const l = /^aksi$/i.test(labels[i]) ? '' : labels[i]; if (c.getAttribute('data-label') !== l) c.setAttribute('data-label', l); });
+      cells.forEach((c, i) => {
+        const l = /^aksi$/i.test(labels[i]) ? '' : labels[i];
+        if (c.getAttribute('data-label') !== l) c.setAttribute('data-label', l);
+        // bungkus isi sel jadi satu blok agar teks/nama/cabang tidak terpecah berjajar menyamping
+        if (!(c.firstElementChild && c.firstElementChild.classList.contains('mb-val') && c.children.length === 1)) {
+          const w = document.createElement('div'); w.className = 'mb-val';
+          while (c.firstChild) w.appendChild(c.firstChild);
+          c.appendChild(w);
+        }
+      });
     });
   }
   const cardifyAll = () => { if (mq.matches) document.querySelectorAll('main table').forEach(cardify); };
