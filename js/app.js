@@ -688,11 +688,19 @@
             const q = ((document.getElementById('filterSearch') || {}).value || '').toLowerCase().trim();
             const b = (document.getElementById('filterBranch') || {}).value || '';
             const s = ticketStatusFilter;
+            const u = (document.getElementById('filterUrgency') || {}).value || '';
+            const d1 = (document.getElementById('filterDateFrom') || {}).value || '';
+            const d2 = (document.getElementById('filterDateTo') || {}).value || '';
 
             let filtered = getAccessibleRequests().filter(r => {
                 const hay = [r.id, ticketApplicant(r), r.division, r.branch, r.justification]
                     .concat((r.items || []).map(i => i.name)).join(' ').toLowerCase();
-                return (!q || hay.includes(q)) && (!b || r.branch === b) && statusMatch(r.status, s) && (!ticketUrgentOnly || r.urgency === 'Critical' || r.urgency === 'High');
+                const tgl = r.submissionDate || '';
+                const okDate = (!d1 || tgl >= d1) && (!d2 || tgl <= d2);
+                const okUrgency = !u || r.urgency === u;
+                return (!q || hay.includes(q)) && (!b || r.branch === b) && statusMatch(r.status, s)
+                    && (!ticketUrgentOnly || r.urgency === 'Critical' || r.urgency === 'High')
+                    && okUrgency && okDate;
             });
 
             appState.pagination.filteredData = sortDataList(filtered);
@@ -772,15 +780,22 @@
         function nextPage() { if(appState.pagination.currentPage < Math.ceil(appState.pagination.filteredData.length / appState.pagination.pageSize)) { appState.pagination.currentPage++; renderRequestsTable(); } }
         function prevPage() { if(appState.pagination.currentPage > 1) { appState.pagination.currentPage--; renderRequestsTable(); } }
         function changePageSize(sz) { appState.pagination.pageSize = parseInt(sz); appState.pagination.currentPage = 1; renderRequestsTable(); }
+        function resetExtraFilters() {
+            ['filterUrgency', 'filterDateFrom', 'filterDateTo'].forEach(id => {
+                const el = document.getElementById(id); if (el) el.value = '';
+            });
+        }
         function clearFilters() {
             const se = document.getElementById('filterSearch'); if (se) se.value = '';
             const br = document.getElementById('filterBranch'); if (br) br.value = '';
+            resetExtraFilters();
             setStatusTab('');
         }
 
         function openTicketList(status, urgent) {
             const se = document.getElementById('filterSearch'); if (se) se.value = '';
             const br = document.getElementById('filterBranch'); if (br) br.value = '';
+            resetExtraFilters();
             setStatusTab(status, urgent);
             const t = document.getElementById('ticketTablePanel');
             if (t) t.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' });
