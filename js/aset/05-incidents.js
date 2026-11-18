@@ -1,7 +1,7 @@
 /* Modul Aset: incidents  (dimuat berurutan setelah file sebelumnya; berbagi scope global dengan modul aset lainnya) */
 /* --- klasifikasi aset rusak / hilang --- */
 const dead=a=>a.status==='Disposed'||a.status==='Lost';
-const KIND={dmg_emp:['amber','Rusak — kelalaian karyawan'],dmg_use:['orange','Rusak — pemakaian wajar'],lost:['violet','Hilang']};
+const KIND={dmg_emp:['amber','Rusak — kelalaian karyawan'],dmg_use:['orange','Rusak — pemakaian wajar'],lost:['violet','Hilang'],mtc:['sky','Maintenance']};
 const kbadge=k=>{const[c,l]=KIND[k]||['slate',k];return `<span class="px-2.5 py-1 text-[10px] uppercase font-bold rounded border bg-${c}-500/10 text-${c}-400 border-${c}-500/20">${l}</span>`};
 AM.report=async function(pre){const E=mine().filter(a=>!dead(a)&&freeQty(a)>=1);
  if(!E.length)return Swal.fire({title:'Tidak ada aset yang bisa dilaporkan',text:'Semua unit sedang dipinjam / dijual atau sudah dihapuskan.',icon:'info',...WN});
@@ -13,19 +13,21 @@ AM.report=async function(pre){const E=mine().filter(a=>!dead(a)&&freeQty(a)>=1);
   {k:'date',l:'Tanggal kejadian',t:'date',v:today()},
   {k:'comp',l:'Ganti rugi dibebankan ke karyawan (Rp, opsional)',t:'number',v:0},
   {k:'note',l:'Kronologi / catatan'}],'Simpan Laporan',{
-  html:'<p class="text-left text-[11px] mt-3" style="color:#e1b782">Contoh: piring 16 unit → laporkan 6 unit “Rusak”, lalu laporkan lagi 7 unit “Hilang”. Sisa 3 unit tetap Baik.</p>',
+  html:'<p class="text-left text-[11px] mt-3" style="color:#e1b782">Contoh: piring 16 unit → laporkan 6 unit “Rusak”, lalu laporkan lagi 7 unit “Hilang”. Sisa 3 unit tetap Baik. Pilih “Maintenance” bila aset hanya perlu servis/perawatan (bukan rusak atau hilang): status berubah ke Maintenance, tanpa nilai kerugian.</p>',
   check:o=>{const a=find(o.a);if(!a)return 'Aset tidak ditemukan';const n=parseInt(o.qty),mx=freeQty(a);
    if(!(n>=1&&n<=mx))return `Jumlah harus antara 1 dan ${mx}`;
-   if(o.kind!=='lost'&&a.status==='Broken')return 'Aset ini sudah berstatus Rusak';
+   if(o.kind==='mtc'&&a.status==='Maintenance')return 'Aset ini sudah berstatus Maintenance';
+   if(o.kind!=='lost'&&o.kind!=='mtc'&&a.status==='Broken')return 'Aset ini sudah berstatus Rusak';
    if(o.kind==='dmg_emp'&&!o.who)return 'Nama karyawan wajib diisi untuk kerusakan karena kelalaian';
-   if(o.comp!==''&&!(Number(o.comp)>=0))return 'Nominal ganti rugi tidak valid';return ''}});
- if(!r)return;const a=find(r.a),n=parseInt(r.qty),k=r.kind,st=k==='lost'?'Lost':'Broken',lab=KIND[k][1],who=r.who?' · '+r.who:'';
- let tgt;
- if(n===q(a)){a.status=st;tgt=a;hist(a,`${lab}: ${n} unit${who}. ${r.note||''}`)}
+   if(o.comp!==''&&!(Number(o.comp)>=0))return 'Nominal ganti rugi tidak valid';
+   if(o.kind==='mtc'&&Number(o.comp)>0)return 'Ganti rugi tidak berlaku untuk Maintenance (aset tidak rusak/hilang)';return ''}});
+ if(!r)return;const a=find(r.a),n=parseInt(r.qty),k=r.kind,st=k==='lost'?'Lost':k==='mtc'?'Maintenance':'Broken',lab=KIND[k][1],who=r.who?' · '+r.who:'';
+ let tgt;const mtcInfo=x=>{if(k==='mtc'){x.mtcDate=r.date||today();x.mtcNote=r.note||''}};
+ if(n===q(a)){a.status=st;tgt=a;mtcInfo(a);hist(a,`${lab}: ${n} unit${who}. ${r.note||''}`)}
  else{let id,x=2;do{id=`${a.id}-R${x++}`}while(find(id));
   tgt={...a,id,qty:n,status:st,assigned:null,history:[],mtcDate:'',mtcNote:'',vendorId:'',mtcCost:0};a.qty=q(a)-n;
-  hist(a,`${n} unit dipisah (${lab}${who}) menjadi ${id}`);hist(tgt,`Dari ${a.id}: ${lab}, ${n} unit${who}. ${r.note||''}`);AM.assets.push(tgt)}
- AM.incidents.push({id:'INC-'+Date.now().toString(36).toUpperCase()+Math.random().toString(36).slice(2,4).toUpperCase(),assetId:a.id,newAssetId:tgt.id,name:a.name,category:a.category,branch:a.branch,division:a.division||'',qty:n,kind:k,who:r.who,date:r.date||today(),note:r.note,unit:a.price||0,loss:(a.price||0)*n,comp:Number(r.comp)||0,by:(user()||{}).name||'-',ts:Date.now(),found:''});
+  mtcInfo(tgt);hist(a,`${n} unit dipisah (${lab}${who}) menjadi ${id}`);hist(tgt,`Dari ${a.id}: ${lab}, ${n} unit${who}. ${r.note||''}`);AM.assets.push(tgt)}
+ AM.incidents.push({id:'INC-'+Date.now().toString(36).toUpperCase()+Math.random().toString(36).slice(2,4).toUpperCase(),assetId:a.id,newAssetId:tgt.id,name:a.name,category:a.category,branch:a.branch,division:a.division||'',qty:n,kind:k,who:r.who,date:r.date||today(),note:r.note,unit:a.price||0,loss:k==='mtc'?0:(a.price||0)*n,comp:k==='mtc'?0:(Number(r.comp)||0),by:(user()||{}).name||'-',ts:Date.now(),found:''});
  await save();Swal.fire({title:'Laporan tersimpan',text:`${n} unit “${a.name}” dicatat: ${lab}. Sisa unit Baik di baris asal: ${q(a)===n&&tgt===a?0:q(a)}.`,icon:'success',...WN})};
 function incView(){const all=canAll(),mb=myBranches(),f=AM.incF||'all',ga=isGA();
  const L=AM.incidents.filter(i=>all||mb.includes(i.branch)).sort((a,b)=>(b.ts||0)-(a.ts||0)),V=L.filter(i=>f==='all'||i.kind===f),
