@@ -12,7 +12,8 @@
     ...AM.contacts.map(d => ({ k: 'c', d }))
   ].map(r => ({ ...r, c: kindOf(r) }));
 
-  const state = () => { const f = AM.vf; if (!f.k) f.k = 'all'; if (f.s == null) f.s = ''; if (!f.t) f.t = 'all'; return f; };
+  const PAGE = 30;
+  const state = () => { const f = AM.vf; if (!f.k) f.k = 'all'; if (f.s == null) f.s = ''; if (!f.t) f.t = 'all'; if (!f.n) f.n = PAGE; return f; };
 
   function contractBadge(r) {
     if (r.c === 'none') return `<span class="px-2 py-1 text-[10px] font-bold rounded border bg-slate-500/10 text-slate-300 border-slate-500/30 whitespace-nowrap">Tanpa Kontrak</span>`;
@@ -37,7 +38,7 @@
     else { const t = ctInfo(d.type); tag = `<p class="text-[11px] mt-2 font-bold text-${t[2]}-400"><i class="fa-solid ${t[1]} mr-1"></i>Sales · ${esc(t[0])}</p>`; }
     const st = !isV ? (CS[d.status] || CS.baru) : null;
     const edit = isV ? `AM.vendor('${d.id}')` : `AM.contact('${d.id}')`, del = isV ? `AM.delVendor('${d.id}')` : `AM.delContact('${d.id}')`;
-    return `<div class="glass-panel p-5">
+    return `<div class="glass-panel p-5" style="content-visibility:auto;contain-intrinsic-size:auto 210px">
   <div class="flex justify-between items-start gap-2"><div class="min-w-0"><h3 class="font-bold text-white text-sm">${esc(d.name)}</h3>${!isV && d.company ? `<p class="text-xs text-dobah-200/70 mt-0.5">${esc(d.company)}</p>` : ''}</div>${contractBadge(r)}</div>
   ${tag}
   ${isV ? (d.service ? `<p class="text-xs text-dobah-200/80 mt-2">${esc(d.service)}</p>` : '') : (d.offer ? `<p class="text-xs text-dobah-200/80 mt-2">${esc(d.offer)}</p>` : '')}
@@ -65,8 +66,9 @@
   }
   function grid() {
     const el = $('amVkGrid'); if (!el) return;
-    const L = visible(), none = AM.vendors.length + AM.contacts.length === 0;
-    el.innerHTML = L.length ? L.map(card).join('')
+    const f = state(), L = visible(), none = AM.vendors.length + AM.contacts.length === 0, shown = L.slice(0, f.n);
+    const more = L.length > shown.length ? `<div class="md:col-span-2 xl:col-span-3 flex flex-col items-center gap-2 py-3"><p class="text-[11px] text-dobah-200/60">Menampilkan ${shown.length} dari ${L.length} data</p><button onclick="AM.vkMore()" class="modern-button bg-cocoa-800 text-dobah-200 border border-white/10 text-xs font-bold px-5 py-2.5">Tampilkan ${Math.min(PAGE, L.length - shown.length)} lagi</button></div>` : '';
+    el.innerHTML = L.length ? shown.map(card).join('') + more
       : `<div class="glass-panel p-10 text-center text-dobah-200/50 italic md:col-span-2 xl:col-span-3">${none ? 'Belum ada data. Klik “Tambah Vendor” atau “Tambah Kontak Sales”.' : 'Tidak ada data pada filter ini.'}</div>`;
   }
 
@@ -87,10 +89,12 @@
  <div id="amVkGrid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4"></div>`;
     grid();
   }
-  AM.vkTab = k => { state().t = k; view(); };
-  AM.vkQ = v => { state().q = v; grid(); };
-  AM.vkK = v => { state().k = v; grid(); };
-  AM.vkS = v => { state().s = v; grid(); };
+  let qT;
+  AM.vkTab = k => { const f = state(); f.t = k; f.n = PAGE; view(); };
+  AM.vkQ = v => { const f = state(); f.q = v; clearTimeout(qT); qT = setTimeout(() => { f.n = PAGE; grid(); }, 220); };   // tunda sedikit agar mengetik tidak patah-patah
+  AM.vkK = v => { const f = state(); f.k = v; f.n = PAGE; grid(); };
+  AM.vkS = v => { const f = state(); f.s = v; f.n = PAGE; grid(); };
+  AM.vkMore = () => { const f = state(); f.n += PAGE; grid(); };
 
   /* ---- form Kontak Sales: ditambah status kontrak (sama seperti vendor) ---- */
   AM.contact = async function (id) {
