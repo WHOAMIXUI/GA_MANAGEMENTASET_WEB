@@ -142,6 +142,14 @@
   /* bottom-nav: badge tidak menimpa ikon */
   #mbNav .mb-dot { left: calc(50% + 6px); top: 3px; }
 
+
+  /* kotak angka (KPI) lebih pendek supaya daftar di bawahnya langsung terlihat */
+  main .grid.grid-cols-2 > .glass-panel { padding: 10px 12px !important; border-radius: 16px; }
+  main .grid.grid-cols-2 > .glass-panel > .flex { margin-bottom: 4px !important; align-items: flex-start; gap: 6px; }
+  main .grid.grid-cols-2 > .glass-panel > .flex > span { font-size: 9.5px; line-height: 1.25; }
+  main .grid.grid-cols-2 > .glass-panel > .flex > div { width: 26px; height: 26px; flex: 0 0 26px; border-radius: 8px; font-size: 12px; }
+  main .grid.grid-cols-2 { gap: 8px !important; }
+
   /* bar offline & elemen melayang jangan tertutup bottom-nav */
   .ga-offline-bar { bottom: calc(var(--mb-nav) + var(--mb-safe)); padding-bottom: 6px; z-index: 39; }
   .ga-count-row { grid-template-columns: 1fr; }
