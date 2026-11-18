@@ -177,7 +177,7 @@
       heading(d, `4. Pengajuan barang bulan ini (${rq.length})`); table(d, ['Status', 'Jumlah'], Object.entries(byS).map(([k, v]) => [k, v]));
       table(d, ['Tiket', 'Tanggal', 'Cabang', 'Item', 'Status', 'Nilai'], rq.slice(0, 60).map(x => [x.id, x.submissionDate, x.branch, (x.items || []).length, x.status, R(rt(x))]));
       para(d, `Total nilai pengajuan bulan ini: ${R(rq.reduce((s, x) => s + rt(x), 0))}`);
-      const ic = (AM.incidents || []).filter(x => (!br || x.branch === br) && inMonth(x.date, ym));
+      const ic = (AM.incidents || []).filter(x => x.kind !== 'mtc' && (!br || x.branch === br) && inMonth(x.date, ym));
       heading(d, `5. Aset rusak / hilang bulan ini (${ic.length})`); table(d, ['Tanggal', 'Aset', 'Cabang', 'Qty', 'Jenis', 'Kerugian', 'Ganti rugi'], ic.map(x => [x.date, x.name, x.branch || '-', x.qty, ((KIND[x.kind] || [])[1]) || x.kind, R(x.loss), R(x.comp)]));
       const ln = AM.loans.filter(l => inMonth(l.date, ym) || inMonth(l.returnedAt, ym)).filter(l => { const a = find(l.assetId); return !br || (a && a.branch === br); });
       heading(d, `6. Peminjaman aset (${ln.length} aktivitas, ${overdue().length} lewat batas saat ini)`); table(d, ['Aset', 'Peminjam', 'Qty', 'Pinjam', 'Kembali'], ln.slice(0, 60).map(l => [(find(l.assetId) || {}).name || l.assetId, l.name, l.qty, l.date, l.returnedAt || 'belum']));
