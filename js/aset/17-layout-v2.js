@@ -148,7 +148,7 @@
     }
     AM._msig = J(mainObj());
     const mg = migrate(); if (window.AUD) AUD.rebase();
-    try { localStorage.setItem(LS, JSON.stringify({ assets: AM.assets, vendors: AM.vendors, contacts: AM.contacts, life: AM.life, loans: AM.loans, market: AM.market, trades: AM.trades, incidents: AM.incidents })); } catch (e) {}
+    AM.persist();
     renderActive(); updateNotifications(); if (mg) save();
   };
 
