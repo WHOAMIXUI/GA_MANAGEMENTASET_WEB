@@ -274,3 +274,13 @@ html[data-theme="light"] .item-qty:focus, html[data-theme="light"] .item-unit:fo
 html[data-theme="light"] .item-cost:focus, html[data-theme="light"] .edit-item-status:focus, html[data-theme="light"] .edit-item-notes:focus,
 html[data-theme="light"] .item-notes:focus, html[data-theme="light"] #editStatus:focus, html[data-theme="light"] #editUrgency:focus,
 html[data-theme="light"] #editGANotes:focus { border-color: #f4a23a; box-shadow: 0 0 0 3px rgba(244,162,58,.38); outline: none; }
+
+/* ---- Menu aksi dropdown (registry aset) ---- */
+.am-pop { position: fixed; z-index: 9999; min-width: 230px; max-width: calc(100vw - 16px); padding: 6px; border-radius: 14px;
+  background: #22120a; color: #fcf6f0; border: 1px solid rgba(255,255,255,.10); box-shadow: 0 14px 34px rgba(0,0,0,.45); }
+.am-item { display: flex; align-items: center; gap: 10px; width: 100%; text-align: left; padding: 8px 10px; border-radius: 9px;
+  font-size: 12px; font-weight: 600; background: transparent; border: 0; color: inherit; cursor: pointer; }
+.am-item i { width: 16px; text-align: center; flex: 0 0 auto; }
+.am-item:hover, .am-item:focus-visible { background: rgba(255,255,255,.08); outline: none; }
+html[data-theme="light"] .am-pop { background: rgba(255,252,247,.98); color: #4a2a12; border-color: rgba(160,95,35,.22); box-shadow: 0 14px 34px rgba(120,70,20,.22); }
+html[data-theme="light"] .am-item:hover, html[data-theme="light"] .am-item:focus-visible { background: rgba(244,162,60,.16); }
