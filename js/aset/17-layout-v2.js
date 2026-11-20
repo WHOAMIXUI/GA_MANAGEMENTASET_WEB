@@ -80,7 +80,8 @@
   /* ---------- tulis: hanya yang berubah, hanya kolom yang berubah ---------- */
   V2.write = async function () {
     const { doc, setDoc, writeBatch } = window.fbDeps, db = window.db, act = active();
-    if (act.some(k => !S[k].ready)) { AM.cloudErr = 'data cloud belum selesai dimuat'; return false; }
+    for (let i = 0; i < 24 && act.some(k => !S[k].ready); i++) await new Promise(r => setTimeout(r, 250)); // beri waktu ±6 dtk
+    if (act.some(k => !S[k].ready)) { AM.cloudErr = 'data cloud belum selesai dimuat (' + act.filter(k => !S[k].ready).map(k => KINDS[k].col).join(', ') + ')'; return false; }
     try {
       const ops = [];
       for (const kind of act) {
@@ -180,9 +181,11 @@
     }, err => { console.error('Gagal membaca settings/asset_layout:', err); cloudWarn('Tidak bisa membaca penanda layout (' + errOf(err) + '). Perangkat ini bisa salah memakai layout lama. Periksa aturan Firestore untuk settings/asset_layout.'); });
     active().forEach(kind => {
       const st = S[kind];
-      onSnapshot(collection(db, KINDS[kind].col), snap => {
+      onSnapshot(collection(db, KINDS[kind].col), { includeMetadataChanges: true }, snap => {
         if (snap.metadata.fromCache && snap.empty && !st.ready) return; // cache kosong di perangkat baru: tunggu server
-        snap.docChanges().forEach(ch => {
+        const chs = snap.docChanges();
+        if (st.ready && !chs.length) return; // hanya perubahan metadata: tidak perlu render ulang
+        chs.forEach(ch => {
           const k = ch.doc.id;
           if (ch.type === 'removed') { const o = st.ad[k]; delete st.ad[k]; if (o) { st.sync.delete(o.id); st.base.delete(o.id); } return; }
           if (ch.doc.metadata.hasPendingWrites && st.ad[k]) return; // gema dari tulisan kita sendiri
