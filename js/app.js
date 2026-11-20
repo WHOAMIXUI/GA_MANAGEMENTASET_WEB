@@ -855,6 +855,11 @@
             const labels = Object.keys(branchBudgets);
             const dataValues = Object.values(branchBudgets);
 
+            // Hemat CPU: lewati bila grafik sedang tersembunyi atau datanya tidak berubah.
+            if (!ctx.offsetParent) return;
+            const __sig = JSON.stringify([labels, dataValues, document.documentElement.getAttribute('data-theme')]);
+            if (chartInstance && chartInstance.canvas === ctx && chartInstance.__sig === __sig) return;
+            const __first = !chartInstance;
             if(chartInstance) chartInstance.destroy();
 
             chartInstance = new Chart(ctx, {
@@ -873,6 +878,7 @@
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
+                    animation: __first ? { duration: 500 } : false,
                     plugins: { legend: { display: false } },
                     scales: {
                         y: { 
@@ -887,6 +893,7 @@
                     }
                 }
             });
+            chartInstance.__sig = __sig;
         }
 
         function openDetailModal(idx) {
