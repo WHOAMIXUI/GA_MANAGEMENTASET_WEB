@@ -15,6 +15,24 @@ const badge=s=>{const[c,l]=ST[s]||ST.Good;return `<span class="px-2.5 py-1 text-
 const hist=(a,act)=>a.history.push({t:new Date().toLocaleString('id-ID'),act,by:(user()||{}).name||'System'});
 const kpi=(l,v,ic,c='dobah')=>`<div class="glass-panel p-5"><div class="flex justify-between items-start mb-3"><span class="text-[11px] font-extrabold uppercase tracking-wide text-dobah-200/70">${l}</span><div class="w-8 h-8 rounded-lg bg-${c}-400/20 text-${c}-400 flex items-center justify-center border border-${c}-400/30"><i class="fa-solid ${ic}"></i></div></div><span class="font-mono font-black text-2xl text-white">${v}</span></div>`;
 const btn=(fn,ic,t,cls='text-dobah-300')=>`<button onclick="${fn}" title="${t}" class="modern-button bg-cocoa-800 hover:bg-cocoa-900 ${cls} text-[11px] px-2.5 py-1.5 border border-white/5 ml-1"><i class="fa-solid ${ic}"></i></button>`;
+
+/* Menu aksi dropdown (tombol ⋮) untuk baris tabel: item = ikon + label. Popover dipasang di <body> agar tidak terpotong overflow tabel. */
+const mi=(fn,ic,t,cls='text-dobah-300')=>`<button type="button" role="menuitem" onclick="AMM.close();${fn}" class="am-item"><i class="fa-solid ${ic} ${cls}"></i><span>${t}</span></button>`;
+window.AMM=(function(){let pop=null,tb=null;
+ function close(){if(pop){pop.remove();pop=null}if(tb){tb.setAttribute('aria-expanded','false');tb=null}}
+ function toggle(b,ev){if(ev)ev.stopPropagation();if(tb===b){close();return}close();
+  const tpl=b.parentNode.querySelector('template.am-src');if(!tpl)return;
+  pop=document.createElement('div');pop.className='am-pop';pop.setAttribute('role','menu');pop.innerHTML=tpl.innerHTML;document.body.appendChild(pop);
+  tb=b;b.setAttribute('aria-expanded','true');
+  const r=b.getBoundingClientRect(),pw=pop.offsetWidth,ph=pop.offsetHeight;
+  let left=Math.min(Math.max(8,r.right-pw),innerWidth-pw-8),top=r.bottom+6;
+  if(top+ph>innerHeight-8)top=Math.max(8,r.top-ph-6);
+  pop.style.left=left+'px';pop.style.top=top+'px'}
+ document.addEventListener('click',e=>{if(pop&&!pop.contains(e.target))close()});
+ addEventListener('scroll',e=>{if(pop&&!(e.target&&e.target.nodeType&&pop.contains(e.target)))close()},true);
+ addEventListener('resize',close);
+ document.addEventListener('keydown',e=>{if(e.key==='Escape')close()});
+ return{toggle,close}})();
 const th=(...h)=>`<thead><tr class="bg-cocoa-900/90 text-dobah-200 font-mono text-xs uppercase border-b border-white/10">${h.map(x=>`<th class="p-4">${x}</th>`).join('')}</tr></thead>`;
 const tbl=(head,rows,empty='Tidak ada data.')=>`<div class="glass-panel overflow-hidden"><div class="overflow-x-auto"><table class="w-full text-left border-collapse">${head}<tbody class="divide-y divide-white/5 text-xs sm:text-sm font-medium text-dobah-100">${rows||`<tr><td colspan="9" class="p-8 text-center text-dobah-200/50 italic">${empty}</td></tr>`}</tbody></table></div></div>`;
 const sub=a=>`<br><span class="text-[11px] text-dobah-200/60 font-normal">${a}</span>`;
