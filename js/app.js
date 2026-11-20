@@ -167,9 +167,14 @@
                     reqSource = query(reqSource, where('branch', 'in', brs.slice(0, 30)));
                 }
                 if (me && me.role === 'General Affair Manager') listenProfiles();
+                let __lastFC;
                 onSnapshot(reqSource, { includeMetadataChanges: true }, (snapshot) => {
                     // Data dari cache lokal (belum terhubung ke server) -> jangan tampilkan "Live"
                     const fromCache = snapshot.metadata.fromCache;
+                    // Lewati snapshot yang hanya metadata (tidak ada dokumen berubah & status cache sama): tidak perlu render ulang.
+                    const __changed = snapshot.docChanges().length > 0 || fromCache !== __lastFC;
+                    __lastFC = fromCache;
+                    if (!__changed) return;
                     if (!fromCache) {
                         const cloudData = [];
                         snapshot.forEach(docSnap => cloudData.push({ docId: docSnap.id, ...docSnap.data() }));
