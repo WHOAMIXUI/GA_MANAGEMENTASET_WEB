@@ -107,7 +107,7 @@
         #view-list > .grid > .glass-panel:hover { transform: translateY(-3px); }
 
         /* Form UX */
-        .action-bar { position: sticky; bottom: .75rem; z-index: 30; align-items: center; background: rgba(21,10,5,.88); backdrop-filter: blur(10px); border: 1px solid rgba(244,162,58,.25); border-radius: 9999px; padding: .6rem .75rem !important; box-shadow: 0 12px 30px -12px rgba(0,0,0,.8); }
+        .action-bar { position: sticky; bottom: .75rem; z-index: 30; align-items: center; background: rgba(21,10,5,.88); backdrop-filter: blur(6px); border: 1px solid rgba(244,162,58,.25); border-radius: 9999px; padding: .6rem .75rem !important; box-shadow: 0 12px 30px -12px rgba(0,0,0,.8); }
         .action-bar .modern-button { border-radius: 9999px; }
 
         /* Table */

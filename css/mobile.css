@@ -161,7 +161,7 @@
     height: calc(var(--mb-nav) + var(--mb-safe));
     padding: 6px 6px var(--mb-safe);
     background: rgba(27,16,12,.96); border-top: 1px solid rgba(244,162,58,.18);
-    -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
     box-shadow: 0 -8px 28px -12px rgba(0,0,0,.55);
   }
   .mb-kb #mbNav { display: none; }
@@ -207,7 +207,7 @@
   /* ---------- LEMBAR "MENU" ---------- */
   #mbBackdrop {
     display: block; position: fixed; inset: 0; z-index: 44; background: rgba(10,5,2,.62);
-    -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px);
+    
     opacity: 0; pointer-events: none; transition: opacity .2s;
   }
   #mbBackdrop.show { opacity: 1; pointer-events: auto; }

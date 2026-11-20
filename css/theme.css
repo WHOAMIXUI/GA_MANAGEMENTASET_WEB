@@ -46,27 +46,27 @@ html[data-theme="light"] .landing-bg {
 /* ---- permukaan kaca ---- */
 html[data-theme="light"] .glass-panel {
   background: linear-gradient(145deg, rgba(255,255,255,.68), rgba(255,255,255,.38));
-  -webkit-backdrop-filter: blur(24px) saturate(180%); backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
   border: 1px solid rgba(255,255,255,.78);
   box-shadow: 0 12px 40px -14px rgba(130,70,15,.30), inset 0 1px 0 rgba(255,255,255,.95),
               inset 0 -1px 0 rgba(255,255,255,.35), inset 0 0 24px rgba(255,255,255,.18);
 }
 html[data-theme="light"] #sidebar {
   background: linear-gradient(180deg, rgba(255,255,255,.58), rgba(255,255,255,.34));
-  -webkit-backdrop-filter: blur(28px) saturate(180%); backdrop-filter: blur(28px) saturate(180%);
+  -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
   border-right-color: rgba(255,255,255,.8);
   box-shadow: 10px 0 40px -22px rgba(130,70,15,.30), inset -1px 0 0 rgba(255,255,255,.6);
 }
 html[data-theme="light"] header.drip {
   background: rgba(255,255,255,.58);
-  -webkit-backdrop-filter: blur(24px) saturate(180%); backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
   border-bottom-color: rgba(255,255,255,.8);
   box-shadow: 0 8px 30px -14px rgba(130,70,15,.30), inset 0 1px 0 rgba(255,255,255,.9);
 }
 html[data-theme="light"] #notifMenu, html[data-theme="light"] #userMenuDropdown { background: rgba(255,252,247,.94); }
 html[data-theme="light"] .bg-\[\#150a05\]\/80, html[data-theme="light"] .bg-\[\#150a05\]\/95 {
   background-color: rgba(255,238,218,.50);
-  -webkit-backdrop-filter: blur(14px) saturate(140%); backdrop-filter: blur(14px) saturate(140%);
+  -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
 }
 html[data-theme="light"] .bg-\[\#150a05\]\/80 .glass-panel, html[data-theme="light"] .bg-\[\#150a05\]\/95 .glass-panel { background: linear-gradient(145deg, rgba(255,253,249,.92), rgba(255,247,238,.84)); }
 html[data-theme="light"] .fixed.inset-0.bg-cocoa-950\/60 { background-color: rgba(90,50,15,.28); }
@@ -188,7 +188,7 @@ html[data-theme="light"] .theme-toggle:hover { color: var(--accent-ink); }
 /* ---- pop-up SweetAlert (warna dari JS diberi !important agar bisa ditimpa) ---- */
 html[data-theme="light"] .swal2-popup { background: rgba(255,252,247,.90) !important; color: var(--ink) !important;
   border: 1px solid rgba(255,255,255,.95) !important;
-  -webkit-backdrop-filter: blur(24px) saturate(180%); backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
   box-shadow: 0 24px 60px -20px rgba(130,70,15,.45), inset 0 1px 0 #fff; }
 html[data-theme="light"] .swal2-title { color: var(--ink) !important; }
 html[data-theme="light"] .swal2-html-container { color: var(--ink-2) !important; }
