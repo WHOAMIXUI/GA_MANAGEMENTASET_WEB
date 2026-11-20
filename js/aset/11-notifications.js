@@ -98,7 +98,7 @@ NC.clear=function(){const st=nload();if(!st)return;st.items=[];nsave();ui()};
 NC.sound=function(){localStorage.setItem('ga_nc_snd',localStorage.getItem('ga_nc_snd')==='0'?'1':'0');ui()};
 NC.perm=function(){if('Notification' in window)Notification.requestPermission().then(()=>ui())};
 NC.start=function(){if(!user())return;ui();if(NC.t){NC.scan();return}NC.t=1;setTimeout(()=>{NC.live=true},4000);setInterval(()=>NC.scan(),300000);setInterval(ui,60000);document.addEventListener('visibilitychange',()=>{if(!document.hidden)NC.scan()});NC.scan()};
-window.updateNotifications=function(){NC.scan()};
+window.updateNotifications=function(){clearTimeout(NC._dt);NC._dt=setTimeout(()=>NC.scan(),1500)};
 
 window.addEventListener('DOMContentLoaded',()=>{load()});
 window.addEventListener('profile-ready',()=>{load();subscribe();NC.start()});
