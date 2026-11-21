@@ -5,7 +5,7 @@
 
   function read() {
     try { var v = localStorage.getItem(KEY); if (v === 'light' || v === 'dark') return v; } catch (e) {}
-    return 'light';
+    return 'dark';
   }
   function cssVar(name, fallback) {
     var v = getComputedStyle(root).getPropertyValue(name).trim();
@@ -13,7 +13,7 @@
   }
   function paintButtons(t) {
     var light = t === 'light';
-    var label = light ? 'Ganti ke tema gelap' : 'Ganti ke tema krem hangat';
+    var label = light ? 'Ganti ke tema gelap' : 'Ganti ke tema terang (liquid glass)';
     document.querySelectorAll('[data-theme-toggle]').forEach(function (b) {
       b.setAttribute('aria-label', label); b.title = label;
       var i = b.querySelector('i'); if (i) i.className = 'fa-solid ' + (light ? 'fa-moon' : 'fa-sun');
@@ -42,7 +42,7 @@
     root.setAttribute('data-theme', t);
     var m = document.querySelector('meta[name="theme-color"]');
     if (!m) { m = document.createElement('meta'); m.name = 'theme-color'; document.head.appendChild(m); }
-    m.content = t === 'light' ? '#fbf3e4' : '#150a05';
+    m.content = t === 'light' ? '#fdf1e3' : '#150a05';
     paintButtons(t);
     if (changed) refreshCharts();
   }
