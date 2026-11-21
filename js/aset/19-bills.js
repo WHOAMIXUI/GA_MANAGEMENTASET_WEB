@@ -83,26 +83,34 @@
       <div class="mt-3 flex flex-wrap items-center gap-1">${b.done ? '' : `<button onclick="BL.pay('${b.id}')" class="modern-button bg-dobah-400 text-cocoa-950 text-xs font-bold px-4 py-2"><i class="fa-solid fa-circle-check mr-1"></i>Bayar</button>`}${btn(`BL.hist('${b.id}')`, 'fa-clock-rotate-left', 'Riwayat pembayaran')}${btn(`BL.edit('${b.id}')`, 'fa-pen', 'Edit')}${btn(`BL.del('${b.id}')`, 'fa-trash', 'Hapus', 'text-rose-400')}</div></div>`;
   }
   const rank = b => b.done ? 9 : ({ late: 0, soon: 1, ok: 2 })[stat(b)];
+  const FL = { all: 'Semua tagihan', act: 'Belum lunas', late: 'Terlambat', soon: 'Segera jatuh tempo', ok: 'Aman', paid: 'Lunas', d30: 'Jatuh tempo ≤ 30 hari' };
+  const match = (b, t) => t === 'all' || (t === 'act' ? !b.done : t === 'd30' ? !b.done && days(b.due) <= 30 : stat(b) === t);
   function grid() {
     const el = $('blGrid'); if (!el) return;
     const f = BL.f, qq = (f.q || '').toLowerCase();
-    const L = live().filter(b => (f.t === 'all' || stat(b) === f.t) && (!qq || [b.name, b.cat, b.branch, b.vendor].join(' ').toLowerCase().includes(qq)))
+    const L = live().filter(b => match(b, f.t) && (!qq || [b.name, b.cat, b.branch, b.vendor].join(' ').toLowerCase().includes(qq)))
       .sort((a, b) => rank(a) - rank(b) || String(a.due).localeCompare(String(b.due)));
+    const cap = $('blCap'); if (cap) cap.innerHTML = `Menampilkan <b class="text-white">${FL[f.t]}</b> · ${L.length} tagihan${f.t !== 'all' ? ` · <button onclick="BL.tab('all')" class="text-dobah-300 hover:text-white underline">Tampilkan semua</button>` : ''}`;
     el.innerHTML = L.length ? L.map(card).join('') : '<div class="glass-panel p-10 text-center text-dobah-200/50 italic md:col-span-2 xl:col-span-3">Belum ada tagihan pada filter ini.</div>';
   }
+  // kartu ringkasan yang bisa diklik (sorot oranye saat filternya aktif)
+  const kcard = (l, v, ic, c, k) => `<div onclick="BL.pick('${k}')" role="button" tabindex="0" title="Klik untuk menampilkan" style="cursor:pointer;${BL.f.t === k ? 'outline:2px solid #f4a23a;outline-offset:-2px;border-radius:1rem;' : ''}">${kpi(l, v, ic, c)}</div>`;
   BL.render = function () {
     const v = $('view-abil'); if (!v) return; load();
     const A = live(), act = A.filter(b => !b.done), late = act.filter(b => stat(b) === 'late'), soon = act.filter(b => stat(b) === 'soon'),
-      due30 = act.filter(b => days(b.due) <= 30).reduce((n, b) => n + (Number(b.amount) || 0), 0), f = BL.f;
-    const tabs = [['all', 'Semua (' + A.length + ')'], ['late', 'Terlambat (' + late.length + ')'], ['soon', 'Segera (' + soon.length + ')'], ['ok', 'Aman (' + (act.length - late.length - soon.length) + ')'], ['paid', 'Lunas (' + (A.length - act.length) + ')']]
-      .map(([k, l]) => `<button onclick="BL.tab('${k}')" class="modern-button text-xs font-bold px-4 py-2 border ${f.t === k ? 'bg-dobah-400 text-cocoa-950 border-dobah-400' : 'bg-cocoa-800 text-dobah-200 border-white/10'}">${l}</button>`).join('');
-    v.innerHTML = `<div class="grid grid-cols-2 lg:grid-cols-4 gap-4">${kpi('Tagihan Aktif', act.length, 'fa-money-bill-wave')}${kpi('Terlambat', late.length, 'fa-triangle-exclamation', 'rose')}${kpi('Segera Jatuh Tempo', soon.length, 'fa-hourglass-half', 'amber')}${kpi('Nominal ≤ 30 Hari', rp(due30), 'fa-wallet', 'emerald')}</div>
-      <div class="flex flex-wrap justify-between items-center gap-3"><div class="flex gap-2 flex-wrap">${tabs}</div><div class="flex gap-2"><button onclick="BL.csv()" class="modern-button bg-cocoa-800 text-dobah-200 border border-white/10 text-xs font-bold px-4 py-2"><i class="fa-solid fa-file-csv mr-1"></i>CSV</button><button onclick="BL.add()" class="modern-button bg-dobah-400 text-cocoa-950 text-xs font-bold px-4 py-2"><i class="fa-solid fa-plus mr-1"></i>Tambah Tagihan</button></div></div>
-      <div class="glass-panel p-4"><input placeholder="Cari nama tagihan / cabang / vendor..." value="${esc(f.q)}" oninput="BL.q(this.value)" class="w-full glass-input px-3.5 py-2 text-xs sm:text-sm font-semibold"></div>
+      d30 = act.filter(b => days(b.due) <= 30), sum30 = d30.reduce((n, b) => n + (Number(b.amount) || 0), 0), f = BL.f,
+      cnt = { all: A.length, act: act.length, late: late.length, soon: soon.length, ok: act.length - late.length - soon.length, paid: A.length - act.length, d30: d30.length };
+    const sel = Object.keys(FL).map(k => `<option value="${k}" ${f.t === k ? 'selected' : ''}>${FL[k]} (${cnt[k]})</option>`).join('');
+    v.innerHTML = `<div class="grid grid-cols-2 lg:grid-cols-4 gap-4">${kcard('Tagihan Aktif', act.length, 'fa-money-bill-wave', 'dobah', 'act')}${kcard('Terlambat', late.length, 'fa-triangle-exclamation', 'rose', 'late')}${kcard('Segera Jatuh Tempo', soon.length, 'fa-hourglass-half', 'amber', 'soon')}${kcard('Nominal ≤ 30 Hari', rp(sum30), 'fa-wallet', 'emerald', 'd30')}</div>
+      <div class="glass-panel p-4"><div class="flex flex-wrap items-center gap-3"><select onchange="BL.tab(this.value)" class="glass-input px-3.5 py-2 text-xs sm:text-sm font-semibold" style="min-width:13rem" aria-label="Filter tagihan">${sel}</select>
+        <input placeholder="Cari nama tagihan / cabang / vendor..." value="${esc(f.q)}" oninput="BL.q(this.value)" class="flex-1 glass-input px-3.5 py-2 text-xs sm:text-sm font-semibold" style="min-width:12rem">
+        <button onclick="BL.csv()" class="modern-button bg-cocoa-800 text-dobah-200 border border-white/10 text-xs font-bold px-4 py-2"><i class="fa-solid fa-file-csv mr-1"></i>CSV</button><button onclick="BL.add()" class="modern-button bg-dobah-400 text-cocoa-950 text-xs font-bold px-4 py-2"><i class="fa-solid fa-plus mr-1"></i>Tambah Tagihan</button></div></div>
+      <p id="blCap" class="text-xs text-dobah-200/60" style="scroll-margin-top:5rem"></p>
       <div id="blGrid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4"></div>`;
     grid();
   };
-  BL.tab = k => { BL.f.t = k; BL.render(); };
+  BL.pick = k => { BL.f.t = BL.f.t === k ? 'all' : k; BL.render(); const c = $('blCap'); if (c && c.scrollIntoView) c.scrollIntoView({ behavior: 'smooth', block: 'start' }); };
+  BL.tab = k => { BL.f.t = FL[k] ? k : 'all'; BL.render(); };
   BL.q = v => { BL.f.q = v; grid(); };
 
   /* ---------- tambah / ubah ---------- */
