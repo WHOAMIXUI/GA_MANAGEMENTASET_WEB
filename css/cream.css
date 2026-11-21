@@ -86,3 +86,11 @@ html[data-theme="light"] #sidebar .nav-item.active,html[data-theme="light"] #sid
 @media(max-width:1000px){.tq{grid-template-columns:1fr}.tq-q{position:static;max-height:none}.tq-list{max-height:70vh}.tq-4{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:560px){.tq-list{grid-template-columns:1fr}}
 .tq-av{width:1.1rem;height:1.1rem;border-radius:99px;background:var(--cz-peach);color:#9a4f08;font-size:.6rem;font-weight:800;display:inline-flex;align-items:center;justify-content:center;flex:none}
+
+.tq-fr{display:flex;gap:.6rem;align-items:center}.tq-fr .tq-s{flex:1;min-width:0}.tq-fw{position:relative;flex:none}
+.tq-fb{display:inline-flex;align-items:center;gap:.5rem;padding:.65rem 1rem;border-radius:99px;font-size:.8rem;font-weight:700;background:rgba(255,255,255,.7);border:1px solid var(--cz-line);color:var(--cz-ink);white-space:nowrap;transition:.15s}
+.tq-fb:hover{border-color:var(--cz-acc)}.tq-fb.on{background:var(--cz-peach);border-color:var(--cz-acc);color:#9a4f08}.tq-fb em{font-style:normal;font-size:.68rem;font-weight:800;background:var(--cz-acc);color:#fff;border-radius:99px;padding:0 .5rem;line-height:1.3rem}.tq-fb u{text-decoration:none;font-size:.7rem;color:var(--cz-mut)}
+.tq-pop{position:absolute;right:0;top:calc(100% + .5rem);z-index:40;min-width:220px;padding:.4rem;border-radius:18px;background:#fffaf1;border:1px solid #f0dfc4;box-shadow:0 18px 40px -12px rgba(120,70,20,.35)}.tq-pop[hidden]{display:none}
+.tq-pop button{display:flex;align-items:center;gap:.7rem;width:100%;text-align:left;padding:.6rem .8rem;border-radius:12px;font-size:.82rem;font-weight:700;color:#3b2410}.tq-pop button:hover{background:#fdeed8}.tq-pop button.on{background:#fcd9b6;color:#7a3d08}
+.tq-pop button i:first-child{width:1rem;text-align:center;color:var(--cz-acc)}.tq-pop button span{flex:1}.tq-pop button em{font-style:normal;font-size:.7rem;font-weight:800;color:#8a6a4a}.tq-ck{color:#1f9d57!important}
+html:not([data-theme="light"]) .tq-pop{background:#331d14;border-color:rgba(255,255,255,.1)}html:not([data-theme="light"]) .tq-pop button{color:#fcf6f0}html:not([data-theme="light"]) .tq-pop button:hover{background:rgba(244,162,58,.15)}
