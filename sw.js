@@ -1,6 +1,6 @@
 /* Service worker GA Aset: bisa di-install, tahan koneksi buruk, dan menerima push.
    Naikkan VER setiap rilis supaya cache lama dibuang. */
-const VER = 'ga-aset-v19';
+const VER = 'ga-aset-v20';
 const SHELL_CACHE = VER + '-shell';
 const CDN_CACHE = VER + '-cdn';
 const SHELL = [
@@ -13,7 +13,7 @@ const SHELL = [
   'js/aset/05-incidents.js', 'js/aset/06-actions.js', 'js/aset/07-contacts.js', 'js/aset/08-contacts-import.js',
   'js/aset/09-assets-import-disposal.js', 'js/aset/10-integration.js', 'js/aset/11-notifications.js',
   'js/aset/12-opname.js', 'js/aset/13-audit.js', 'js/aset/14-attachments.js', 'js/aset/15-backup-report.js',
-  'js/aset/16-notify-settings.js', 'js/aset/17-layout-v2.js', 'js/aset/18-vendor-kontak.js'
+  'js/aset/16-notify-settings.js', 'js/aset/17-layout-v2.js', 'js/aset/18-vendor-kontak.js', 'js/aset/19-bills.js'
 ];
 const CDN_HOSTS = ['cdn.jsdelivr.net', 'www.gstatic.com', 'fonts.googleapis.com', 'fonts.gstatic.com'];
 
