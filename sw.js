@@ -1,11 +1,11 @@
 /* Service worker GA Aset: bisa di-install, tahan koneksi buruk, dan menerima push.
    Naikkan VER setiap rilis supaya cache lama dibuang. */
-const VER = 'ga-aset-v20-cream';
+const VER = 'ga-aset-v20';
 const SHELL_CACHE = VER + '-shell';
 const CDN_CACHE = VER + '-cdn';
 const SHELL = [
   './', 'index.html', 'manifest.webmanifest',
-  'css/style.css', 'css/tailwind.css', 'css/theme.css', 'css/cream.css', 'css/fontawesome-subset.css', 'css/features.css', 'css/mobile.css',
+  'css/style.css', 'css/tailwind.css', 'css/theme.css', 'css/fontawesome-subset.css', 'css/features.css', 'css/mobile.css',
   'assets/fonts/fa-solid-subset.woff2', 'assets/fonts/fa-regular-subset.woff2', 'assets/fonts/fa-brands-subset.woff2',
   'assets/img/logo.png', 'assets/img/logo-2.png', 'assets/img/icon-192.png', 'assets/img/icon-512.png',
   'js/theme.js', 'js/firebase-init.js', 'js/app.js', 'js/new-requests.js', 'js/pwa.js', 'js/mobile.js', 'js/notify-config.js',
@@ -13,7 +13,7 @@ const SHELL = [
   'js/aset/05-incidents.js', 'js/aset/06-actions.js', 'js/aset/07-contacts.js', 'js/aset/08-contacts-import.js',
   'js/aset/09-assets-import-disposal.js', 'js/aset/10-integration.js', 'js/aset/11-notifications.js',
   'js/aset/12-opname.js', 'js/aset/13-audit.js', 'js/aset/14-attachments.js', 'js/aset/15-backup-report.js',
-  'js/aset/16-notify-settings.js', 'js/aset/17-layout-v2.js', 'js/aset/18-vendor-kontak.js', 'js/aset/19-bills.js', 'js/aset/20-dash-themes.js', 'js/tiket-queue.js'
+  'js/aset/16-notify-settings.js', 'js/aset/17-layout-v2.js', 'js/aset/18-vendor-kontak.js', 'js/aset/19-bills.js'
 ];
 const CDN_HOSTS = ['cdn.jsdelivr.net', 'www.gstatic.com', 'fonts.googleapis.com', 'fonts.gstatic.com'];
 
