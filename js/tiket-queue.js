@@ -4,11 +4,12 @@
   const E = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const UR = { Critical: ['URGENT', 'urg'], High: ['HIGH', 'high'], Medium: ['MEDIUM', 'med'], Low: ['LOW', 'low'] };
   const ST = { Menunggu: 'pend', 'Approval Manager Ops': 'prog', 'Approval Finance': 'prog', Dikirim: 'prog', Diterima: 'done', Ditolak: 'rej' };
-  const CH = [['all', 'Semua', () => setStatusTab('')], ['pend', 'Menunggu', () => setStatusTab('Menunggu')], ['urg', 'Mendesak', () => setStatusTab('', true)], ['prog', 'Dalam Proses', () => setStatusTab('PROSES')]];
+  const CH = [['all', 'Semua', () => setStatusTab(''), 'fa-list'], ['pend', 'Menunggu', () => setStatusTab('Menunggu'), 'fa-regular fa-clock'], ['urg', 'Urgent', () => setStatusTab('', true), 'fa-triangle-exclamation'], ['sent', 'Dikirim', () => setStatusTab('Dikirim'), 'fa-paper-plane'], ['done', 'Diterima', () => setStatusTab('Diterima'), 'fa-circle-check']];
+  const cnt = { all: r => true, pend: r => r.status === 'Menunggu', urg: r => r.urgency === 'Critical' || r.urgency === 'High', sent: r => r.status === 'Dikirim', done: r => r.status === 'Diterima' };
   const T = { sel: null, cap: 40 };
   const reqs = () => appState.requests || [];
   const lab = s => (TSTAT[s] || {}).label || s;
-  const act = () => ticketUrgentOnly ? 'urg' : ticketStatusFilter === '' ? 'all' : ticketStatusFilter === 'Menunggu' ? 'pend' : ticketStatusFilter === 'PROSES' ? 'prog' : '';
+  const act = () => ticketUrgentOnly ? 'urg' : ticketStatusFilter === '' ? 'all' : ticketStatusFilter === 'Menunggu' ? 'pend' : ticketStatusFilter === 'Dikirim' ? 'sent' : ticketStatusFilter === 'Diterima' ? 'done' : '';
   const money = r => (r.items || []).reduce((s, i) => s + (i.qty || 0) * (i.cost || 0), 0);
   const prog = r => { const i = TICKET_FLOW.indexOf(r.status), n = TICKET_FLOW.length, done = r.status === 'Diterima' ? n : Math.max(0, i); return { done, n, pct: Math.round(done / n * 100) }; };
 
@@ -16,8 +17,8 @@
     const v = document.getElementById('view-list'); if (!v || document.getElementById('tq-root')) return !!v;
     v.classList.add('tq-on');
     v.insertAdjacentHTML('afterbegin', `<div id="tq-root" class="tq"><aside class="tq-q"><h2>Antrean Tiket</h2>
-      <label class="tq-s"><i class="fa-solid fa-magnifying-glass"></i><input id="tqSearch" placeholder="Cari kode tiket atau pemohon..." oninput="TQ.search(this.value)"></label>
-      <div class="tq-chips" id="tqChips"></div><div id="tqList" class="tq-list"></div></aside><section id="tqDetail" class="tq-d"></section></div>`);
+      <div class="tq-fr"><label class="tq-s"><i class="fa-solid fa-magnifying-glass"></i><input id="tqSearch" placeholder="Cari kode tiket atau pemohon..." oninput="TQ.search(this.value)"></label>
+      <div class="tq-fw"><button type="button" id="tqFbtn" class="tq-fb" onclick="TQ.pop(event)" aria-haspopup="true" aria-expanded="false"></button><div id="tqPop" class="tq-pop" hidden></div></div></div><div id="tqList" class="tq-list"></div></aside><section id="tqDetail" class="tq-d"></section></div>`);
     return true;
   }
   const card = (r, on) => { const [ul, uc] = UR[r.urgency] || UR.Low, sc = ST[r.status] || 'pend';
@@ -48,17 +49,24 @@
   function render() {
     if (!shell()) return; const L = appState.pagination.filteredData || [];
     if (!T.sel || !L.some(r => r.id === T.sel)) T.sel = L[0] ? L[0].id : null;
-    document.getElementById('tqChips').innerHTML = CH.map(([k, l]) => `<button class="${act() === k ? 'on' : ''}" onclick="TQ.chip('${k}')">${l}</button>`).join('');
+    const all = (typeof getAccessibleRequests === 'function' ? getAccessibleRequests() : reqs()), a = act(), cur = CH.find(c => c[0] === a);
+    document.getElementById('tqFbtn').innerHTML = `<i class="fa-solid fa-list-check"></i><span>Filter${cur && a !== 'all' ? ': <b>' + cur[1] + '</b>' : ''}</span><em>${L.length}</em><u>&#9662;</u>`;
+    document.getElementById('tqFbtn').classList.toggle('on', a !== 'all');
+    document.getElementById('tqPop').innerHTML = CH.map(([k, l, , ic]) => `<button class="${a === k ? 'on' : ''}" onclick="TQ.chip('${k}')"><i class="${ic.indexOf(' ') > 0 ? ic : 'fa-solid ' + ic}"></i><span>${l}</span><em>${all.filter(cnt[k]).length}</em>${a === k ? '<i class="fa-solid fa-circle-check tq-ck"></i>' : ''}</button>`).join('');
     const ls = document.getElementById('tqList'), top = ls.scrollTop;
     ls.innerHTML = L.length ? L.slice(0, T.cap).map(r => card(r, r.id === T.sel)).join('') + (L.length > T.cap ? `<button class="tq-more" onclick="TQ.more()">Muat lebih banyak (${L.length - T.cap})</button>` : '') : '<p class="tq-none">Belum ada tiket yang cocok.</p>';
     ls.scrollTop = top; detail(L.find(r => r.id === T.sel) || null);
   }
   window.TQ = { render,
-    chip(k) { T.cap = 40; (CH.find(c => c[0] === k) || CH[0])[2](); },
+    chip(k) { T.cap = 40; TQ.close(); (CH.find(c => c[0] === k) || CH[0])[2](); },
+    pop(e) { e.stopPropagation(); const p = document.getElementById('tqPop'), o = p.hidden; p.hidden = !o; document.getElementById('tqFbtn').setAttribute('aria-expanded', String(o)); },
+    close() { const p = document.getElementById('tqPop'); if (p) p.hidden = true; const b = document.getElementById('tqFbtn'); if (b) b.setAttribute('aria-expanded', 'false'); },
     search(v) { const s = document.getElementById('filterSearch'); if (s) s.value = v; T.cap = 40; applyTableFilters(); },
     pick(id) { T.sel = id; render(); if (window.innerWidth < 900) document.getElementById('tqDetail').scrollIntoView({ behavior: 'smooth' }); },
     more() { T.cap += 40; render(); },
     go(idx, st) { openEditModal(idx); const s = document.getElementById('editStatus'); if (s && [...s.options].some(o => o.value === st)) s.value = st; } };
+  document.addEventListener('click', e => { if (!e.target.closest('.tq-fw')) TQ.close(); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') TQ.close(); });
   const orig = window.renderRequestsTable;
   window.renderRequestsTable = function () { const r = orig.apply(this, arguments); try { render(); } catch (e) { console.error('TQ', e); } return r; };
   document.addEventListener('DOMContentLoaded', () => { try { if (appState.pagination) render(); } catch (e) {} });
