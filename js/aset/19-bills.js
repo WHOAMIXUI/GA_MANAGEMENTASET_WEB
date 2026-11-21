@@ -72,15 +72,27 @@
   }
 
   /* ---------- tampilan ---------- */
+  const CI = { 'Listrik': 'fa-fire', 'Air (PDAM)': 'fa-circle-dot', 'Internet': 'fa-cloud-arrow-up', 'Telepon': 'fa-phone', 'Sewa': 'fa-store',
+    'Pajak / PBB': 'fa-scale-balanced', 'Asuransi': 'fa-file-contract', 'Langganan': 'fa-arrows-rotate', 'Lainnya': 'fa-money-bill-wave' };
+  const SCLS = { late: 'late', soon: 'soon', ok: 'ok', paid: 'paid' };
+  const RIB = { late: 'Terlambat', soon: 'Segera Jatuh Tempo', paid: 'Lunas' };
+  // keterangan selisih hari di bawah tanggal jatuh tempo
+  function when(b) { const d = days(b.due); return d < 0 ? `${-d} hari terlambat` : d === 0 ? 'Hari ini' : `${d} hari lagi`; }
   function card(b) {
-    const s = stat(b), c = SC[s], paid = b.paid || [], last = paid[paid.length - 1];
-    return `<div class="glass-panel p-5"><div class="flex justify-between items-start gap-2"><h3 class="font-bold text-white text-sm">${esc(b.name)}</h3><span class="px-2 py-1 text-[10px] font-bold rounded border bg-${c}-500/10 text-${c}-400 border-${c}-500/20 whitespace-nowrap">${label(b)}</span></div>
-      <p class="text-xs text-dobah-200/80 mt-2">${esc(b.cat || 'Lainnya')}${b.branch ? ' · ' + esc(b.branch) : ''}${b.vendor ? ' · ' + esc(b.vendor) : ''}</p>
-      <p class="font-mono font-black text-lg text-white mt-2">${b.amount ? rp(b.amount) : '<span class="text-xs font-semibold text-dobah-200/50">Nominal belum diisi</span>'}</p>
-      <p class="text-xs text-dobah-200/60 mt-2"><i class="fa-regular fa-calendar mr-1"></i>${b.done ? 'Dibayar' : 'Jatuh tempo'} ${fd(b.done && last ? last.paidAt : b.due)} · ${RECUR[b.recur] || RECUR.once}</p>
-      ${last && !b.done ? `<p class="text-[11px] text-dobah-200/60 mt-1"><i class="fa-solid fa-circle-check mr-1"></i>Terakhir dibayar ${fd(last.paidAt)}${last.amount ? ' · ' + rp(last.amount) : ''}</p>` : ''}
-      ${b.note ? `<p class="text-[11px] text-dobah-200/60 mt-2 italic">${esc(b.note)}</p>` : ''}
-      <div class="mt-3 flex flex-wrap items-center gap-1">${b.done ? '' : `<button onclick="BL.pay('${b.id}')" class="modern-button bg-dobah-400 text-cocoa-950 text-xs font-bold px-4 py-2"><i class="fa-solid fa-circle-check mr-1"></i>Bayar</button>`}${btn(`BL.hist('${b.id}')`, 'fa-clock-rotate-left', 'Riwayat pembayaran')}${btn(`BL.edit('${b.id}')`, 'fa-pen', 'Edit')}${btn(`BL.del('${b.id}')`, 'fa-trash', 'Hapus', 'text-rose-400')}</div></div>`;
+    const s = stat(b), paid = b.paid || [], last = paid[paid.length - 1], act = [];
+    if (s === 'late' || s === 'soon') act.push(`<button type="button" class="bl-btn ${s === 'late' ? 'bl-btn-dark' : 'bl-btn-amber'}" onclick="BL.pay('${b.id}')">Bayar Sekarang</button>`);
+    if (s === 'late') act.push(`<button type="button" class="bl-btn bl-btn-ghost" onclick="BL.detail('${b.id}')">Detail</button>`);
+    else if (s === 'soon') act.push(`<button type="button" class="bl-btn bl-btn-ghost" onclick="BL.remind('${b.id}')">Kirim Pengingat</button>`);
+    else if (s === 'ok') act.push(`<button type="button" class="bl-btn bl-btn-ghost" onclick="BL.detail('${b.id}')">Detail</button><button type="button" class="bl-btn bl-btn-ghost" onclick="BL.remind('${b.id}')">Kirim Pengingat</button>`);
+    else act.push(`<button type="button" class="bl-btn bl-btn-ghost" onclick="BL.detail('${b.id}')">Detail</button>`);
+    const dateCol = b.done
+      ? `<div class="bl-d"><span>Dibayar</span><b>${fd(last ? last.paidAt : b.due)}</b></div>`
+      : `<div class="bl-d"><span>Jatuh Tempo</span><b>${fd(b.due)}</b><small>${when(b)}</small></div>`;
+    return `<article class="bl-card ${SCLS[s]}">${RIB[s] ? `<span class="bl-rib">${RIB[s]}</span>` : ''}
+      <div class="bl-head"><span class="bl-ico" aria-hidden="true"><i class="fa-solid ${CI[b.cat] || CI.Lainnya}"></i></span><h3 class="bl-name" title="${esc(b.name)}">${esc(b.name)}</h3></div>
+      <div class="bl-body"><div class="bl-who"><div>Vendor: <b>${esc(b.vendor || '-')}</b></div><div>Cabang: <b>${esc(b.branch || 'Umum')}</b></div></div>
+        <div class="bl-dates"><div class="bl-d"><span>Berulang</span><b>${RECUR[b.recur] || RECUR.once}</b></div>${dateCol}</div></div>
+      <div class="bl-foot"><div class="bl-amt">${b.amount ? rp(b.amount) : '<small>Nominal belum diisi</small>'}</div><div class="bl-acts">${act.join('')}</div></div></article>`;
   }
   const rank = b => b.done ? 9 : ({ late: 0, soon: 1, ok: 2 })[stat(b)];
   const FL = { all: 'Semua tagihan', act: 'Belum lunas', late: 'Terlambat', soon: 'Segera jatuh tempo', ok: 'Aman', paid: 'Lunas', d30: 'Jatuh tempo ≤ 30 hari' };
@@ -90,28 +102,46 @@
     const f = BL.f, qq = (f.q || '').toLowerCase();
     const L = live().filter(b => match(b, f.t) && (!qq || [b.name, b.cat, b.branch, b.vendor].join(' ').toLowerCase().includes(qq)))
       .sort((a, b) => rank(a) - rank(b) || String(a.due).localeCompare(String(b.due)));
-    const cap = $('blCap'); if (cap) cap.innerHTML = `Menampilkan <b class="text-white">${FL[f.t]}</b> · ${L.length} tagihan${f.t !== 'all' ? ` · <button onclick="BL.tab('all')" class="text-dobah-300 hover:text-white underline">Tampilkan semua</button>` : ''}`;
-    el.innerHTML = L.length ? L.map(card).join('') : '<div class="glass-panel p-10 text-center text-dobah-200/50 italic md:col-span-2 xl:col-span-3">Belum ada tagihan pada filter ini.</div>';
+    el.innerHTML = L.length ? L.map(card).join('') : '<div class="bl-empty"><div class="empty-donut"></div>Belum ada tagihan pada filter ini.</div>';
   }
-  // kartu ringkasan yang bisa diklik (sorot oranye saat filternya aktif)
-  const kcard = (l, v, ic, c, k) => `<div onclick="BL.pick('${k}')" role="button" tabindex="0" title="Klik untuk menampilkan" style="cursor:pointer;${BL.f.t === k ? 'outline:2px solid #f4a23a;outline-offset:-2px;border-radius:1rem;' : ''}">${kpi(l, v, ic, c)}</div>`;
+  // kartu ringkasan yang bisa diklik (diberi cincin oranye saat filternya aktif)
+  const kcard = (l, v, ic, tone, k) => `<button type="button" class="bl-kpi t-${tone}${BL.f.t === k ? ' is-on' : ''}" onclick="BL.pick('${k}')" aria-pressed="${BL.f.t === k}" title="Klik untuk menampilkan">
+    <span class="bl-kpi-top"><span class="bl-kpi-lbl">${l}</span><span class="bl-kpi-ico"><i class="fa-solid ${ic}"></i></span></span><span class="bl-kpi-num">${v}</span></button>`;
   BL.render = function () {
     const v = $('view-abil'); if (!v) return; load();
     const A = live(), act = A.filter(b => !b.done), late = act.filter(b => stat(b) === 'late'), soon = act.filter(b => stat(b) === 'soon'),
       d30 = act.filter(b => days(b.due) <= 30), sum30 = d30.reduce((n, b) => n + (Number(b.amount) || 0), 0), f = BL.f,
       cnt = { all: A.length, act: act.length, late: late.length, soon: soon.length, ok: act.length - late.length - soon.length, paid: A.length - act.length, d30: d30.length };
     const sel = Object.keys(FL).map(k => `<option value="${k}" ${f.t === k ? 'selected' : ''}>${FL[k]} (${cnt[k]})</option>`).join('');
-    v.innerHTML = `<div class="grid grid-cols-2 lg:grid-cols-4 gap-4">${kcard('Tagihan Aktif', act.length, 'fa-money-bill-wave', 'dobah', 'act')}${kcard('Terlambat', late.length, 'fa-triangle-exclamation', 'rose', 'late')}${kcard('Segera Jatuh Tempo', soon.length, 'fa-hourglass-half', 'amber', 'soon')}${kcard('Nominal ≤ 30 Hari', rp(sum30), 'fa-wallet', 'emerald', 'd30')}</div>
-      <div class="glass-panel p-4"><div class="flex flex-wrap items-center gap-3"><select onchange="BL.tab(this.value)" class="glass-input px-3.5 py-2 text-xs sm:text-sm font-semibold" style="min-width:13rem" aria-label="Filter tagihan">${sel}</select>
-        <input placeholder="Cari nama tagihan / cabang / vendor..." value="${esc(f.q)}" oninput="BL.q(this.value)" class="flex-1 glass-input px-3.5 py-2 text-xs sm:text-sm font-semibold" style="min-width:12rem">
-        <button onclick="BL.csv()" class="modern-button bg-cocoa-800 text-dobah-200 border border-white/10 text-xs font-bold px-4 py-2"><i class="fa-solid fa-file-csv mr-1"></i>CSV</button><button onclick="BL.add()" class="modern-button bg-dobah-400 text-cocoa-950 text-xs font-bold px-4 py-2"><i class="fa-solid fa-plus mr-1"></i>Tambah Tagihan</button></div></div>
-      <p id="blCap" class="text-xs text-dobah-200/60" style="scroll-margin-top:5rem"></p>
-      <div id="blGrid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4"></div>`;
+    v.innerHTML = `<div class="bl-kpis">${kcard('Tagihan Aktif', act.length, 'fa-money-bill-wave', 'act', 'act')}${kcard('Terlambat', late.length, 'fa-triangle-exclamation', 'late', 'late')}${kcard('Segera Jatuh Tempo', soon.length, 'fa-hourglass-half', 'soon', 'soon')}${kcard('Nominal ≤ 30 Hari', rp(sum30), 'fa-wallet', 'sum', 'd30')}</div>
+      <div id="blBar" class="bl-bar"><select onchange="BL.tab(this.value)" class="bl-select" aria-label="Filter tagihan">${sel}</select>
+        <input type="search" placeholder="Cari nama tagihan / cabang / vendor..." value="${esc(f.q)}" oninput="BL.q(this.value)" class="bl-search" aria-label="Cari tagihan">
+        <button type="button" onclick="BL.csv()" class="bl-btn bl-btn-ghost"><i class="fa-solid fa-file-csv"></i>.CSV</button><button type="button" onclick="BL.add()" class="bl-btn bl-btn-amber"><i class="fa-solid fa-plus"></i>Tambah Tagihan</button></div>
+      <div id="blGrid" class="bl-grid"></div>`;
     grid();
   };
-  BL.pick = k => { BL.f.t = BL.f.t === k ? 'all' : k; BL.render(); const c = $('blCap'); if (c && c.scrollIntoView) c.scrollIntoView({ behavior: 'smooth', block: 'start' }); };
+  BL.pick = k => { BL.f.t = BL.f.t === k ? 'all' : k; BL.render(); const c = $('blBar'); if (c && c.scrollIntoView) c.scrollIntoView({ behavior: 'smooth', block: 'start' }); };
   BL.tab = k => { BL.f.t = FL[k] ? k : 'all'; BL.render(); };
   BL.q = v => { BL.f.q = v; grid(); };
+
+  /* ---------- detail & kirim pengingat ---------- */
+  BL.detail = function (id) {
+    const b = BL.items[id]; if (!b) return;
+    const s = stat(b), last = (b.paid || []).slice(-1)[0], dd = (k, v) => `<dt>${k}</dt><dd>${v}</dd>`;
+    const bt = (fn, ic, t, cls) => `<button type="button" class="bl-btn bl-btn-${cls || 'ghost'}" onclick="Swal.close();${fn}"><i class="fa-solid ${ic}"></i>${t}</button>`;
+    Swal.fire({ title: esc(b.name), width: 520, showConfirmButton: false, showCloseButton: true, ...SW,
+      html: `<span class="bl-det-st ${s}">${label(b)}</span><dl class="bl-dl">${dd('Kategori', esc(b.cat || 'Lainnya'))}${dd('Vendor', esc(b.vendor || '-'))}${dd('Cabang', esc(b.branch || 'Umum / Kantor Pusat'))}
+        ${dd('Nominal', b.amount ? rp(b.amount) : 'Belum diisi')}${dd('Pengulangan', RECUR[b.recur] || RECUR.once)}${dd(b.done ? 'Dibayar' : 'Jatuh tempo', fd(b.done && last ? last.paidAt : b.due))}
+        ${b.done ? '' : dd('Ingatkan', (b.remind || 7) + ' hari sebelumnya')}${last ? dd('Terakhir dibayar', fd(last.paidAt) + (last.amount ? ' · ' + rp(last.amount) : '')) : ''}${b.note ? dd('Catatan', esc(b.note)) : ''}</dl>
+        <div class="bl-det-actions">${b.done ? '' : bt(`BL.pay('${b.id}')`, 'fa-circle-check', 'Bayar', 'amber')}${b.done ? '' : bt(`BL.remind('${b.id}')`, 'fa-paper-plane', 'Kirim Pengingat')}${bt(`BL.hist('${b.id}')`, 'fa-clock-rotate-left', 'Riwayat')}${bt(`BL.edit('${b.id}')`, 'fa-pen', 'Edit')}${bt(`BL.del('${b.id}')`, 'fa-trash', 'Hapus', 'ghost bl-btn-danger')}</div>` });
+  };
+  // Buka WhatsApp dengan teks pengingat siap kirim (penerima dipilih sendiri)
+  BL.remind = function (id) {
+    const b = BL.items[id]; if (!b || b.done) return; const d = days(b.due);
+    const w = d < 0 ? `sudah terlambat ${-d} hari (jatuh tempo ${fd(b.due)})` : d === 0 ? 'jatuh tempo hari ini' : `jatuh tempo ${fd(b.due)} (${d} hari lagi)`;
+    const msg = `Halo, pengingat tagihan *${b.name}*${b.vendor ? ' ke ' + b.vendor : ''}${b.branch ? ' (cabang ' + b.branch + ')' : ''}: ${b.amount ? rp(b.amount) + ', ' : ''}${w}. Mohon segera diproses. Terima kasih. - Divisi GA`;
+    window.open('https://wa.me/?text=' + encodeURIComponent(msg), '_blank', 'noopener');
+  };
 
   /* ---------- tambah / ubah ---------- */
   async function form(b) {
