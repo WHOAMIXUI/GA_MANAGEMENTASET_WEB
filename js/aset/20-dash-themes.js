@@ -80,14 +80,14 @@
     return `<div class="cz-row cz-dh"><h2>Pusat Aksi</h2>${sw('cmd')}</div>
       <div class="cz-two eq"><div class="cz-card cz-out"><div class="cz-row"><div><h3>Menunggu Persetujuan</h3><small>${d.pend.length} permintaan baru</small></div><em class="cz-cnt">${d.pend.length}</em></div>${apRows(d)}<button class="cz-wide" onclick="switchTab('list')">Tinjau Semua Persetujuan</button></div>
         <div class="cz-card"><h3>Status Sinkron &amp; Peringatan</h3><small>${d.imp ? d.imp + ' item menunggu sinkron' : 'Semua permintaan Selesai sudah masuk registry'} <i class="fa-solid fa-circle-check cz-ok"></i></small><b class="cz-sm">Peringatan Aksi: ${d.tasks.length + (d.imp ? 1 : 0)} item</b>${alRows(d)}<button class="cz-wide" onclick="switchTab('aaud')">Lihat Log Audit</button></div></div>
-      <div class="cz-k4">${kcard('Total Aset (Aktif)', d.units, 'fa-box')}${kcard('Nilai Perolehan', R2(d.val), 'fa-chart-line')}${kcard('Aset Maintenance', d.mt, 'fa-screwdriver-wrench')}${kcard('Aset Dimusnahkan', d.c('Disposed'), 'fa-fire')}</div>
+      <div class="cz-k4">${kcard('Total Aset (Aktif)', d.units, 'fa-boxes-stacked')}${kcard('Nilai Perolehan', R2(d.val), 'fa-chart-line')}${kcard('Aset Maintenance', d.mt, 'fa-screwdriver-wrench')}${kcard('Aset Dimusnahkan', d.c('Disposed'), 'fa-fire')}</div>
       <div class="cz-two cmd"><div class="cz-card"><h3>Kategori Aset (Jumlah)</h3>${bars(d.cat, 7)}</div>
         <div class="cz-card"><h3>Log Aktivitas Aset Terbaru</h3><div class="cz-tblw"><table class="cz-tbl"><thead><tr><th>Waktu</th><th>Aset</th><th>User</th><th>Aksi</th><th>Lokasi</th></tr></thead><tbody>${d.log.slice(0, 5).map(({ a, h }) => `<tr><td>${esc(h.t || '')}</td><td><b>${esc(a.name)}</b><small>${esc(a.id)}</small></td><td class="cz-u">${av(h.by)}${esc(h.by || '—')}</td><td>${esc(h.act || '')}</td><td>${esc(a.branch) || '—'}</td></tr>`).join('') || '<tr><td colspan="5" class="cz-empty">Belum ada aktivitas.</td></tr>'}</tbody></table></div></div></div>`;
   }
 
   function dash() {
     const d = data(), cur = lay(); ['chart', 'chart2'].forEach(k => { if (AM[k]) { try { AM[k].destroy(); } catch (e) {} AM[k] = null; } });
-    $('view-adash').innerHTML = `<div class="cz-wrap cz-${cur}">${cur === 'bento' ? `<div class="cz-row cz-dh"><h2>Dashboard Aset</h2>${sw(cur)}</div>` : ''}${cur === 'split' ? split(d) : cur === 'cmd' ? cmd(d) : bento(d)}</div>`;
+    $('view-adash').innerHTML = `<div class="cz-wrap cz-v-${cur}">${cur === 'bento' ? `<div class="cz-row cz-dh"><h2>Dashboard Aset</h2>${sw(cur)}</div>` : ''}${cur === 'split' ? split(d) : cur === 'cmd' ? cmd(d) : bento(d)}</div>`;
     if (cur === 'bento') line('czC1', trend(d.L));
   }
   window.dash = dash;
