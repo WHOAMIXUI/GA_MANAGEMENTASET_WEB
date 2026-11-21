@@ -9,7 +9,9 @@ html[data-theme="light"] header.drip{background:rgba(255,248,238,.8);border-bott
 html[data-theme="light"] #sidebar .nav-item.active,html[data-theme="light"] #sidebar .nav-item[class*="bg-dobah-"]{background:#fcd9b6;color:#7a3d08;border:1px solid #f4b87a;box-shadow:0 4px 12px -6px rgba(232,137,43,.6)}
 
 /* ---------- dashboard ---------- */
-.cz-wrap{display:flex;flex-direction:column;gap:1.1rem;color:var(--cz-ink);max-width:1200px;margin:0 auto}
+#view-adash{width:100%;min-width:0}
+.cz-wrap{display:flex;flex-direction:column;gap:1.1rem;color:var(--cz-ink);width:100%;max-width:1200px;margin:0 auto;min-width:0}
+.cz-bento,.cz-split,.cz-two,.cz-k4,.cz-row{width:100%}
 .cz-wrap h2{font-family:'Fredoka','Plus Jakarta Sans',sans-serif;font-size:1.45rem;font-weight:600}
 .cz-row{display:flex;justify-content:space-between;align-items:flex-start;gap:.75rem;flex-wrap:wrap}.cz-dh{align-items:center}
 .cz-seg{display:inline-flex;padding:4px;gap:2px;border-radius:14px;background:var(--cz-soft);border:1px solid var(--cz-line)}
