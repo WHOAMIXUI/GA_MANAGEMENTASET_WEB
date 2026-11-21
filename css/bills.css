@@ -3,7 +3,7 @@
    Dipakai oleh js/aset/19-bills.js. Tema gelap = dasar, tema terang = override.
    ========================================================================== */
 
-#view-abil {
+#view-abil, #view-atsk {
   --bl-ink: #fff3e0; --bl-ink2: #e1b782;
   --bl-card: linear-gradient(160deg, rgba(58,33,22,.82), rgba(38,21,14,.76));
   --bl-card-bd: rgba(244,162,58,.18);
@@ -16,7 +16,7 @@
   --bl-soon-bg: linear-gradient(160deg, rgba(244,162,58,.26), rgba(150,90,30,.30));
   --bl-soon-bd: #f1b24a;
 }
-html[data-theme="light"] #view-abil {
+html[data-theme="light"] #view-abil, html[data-theme="light"] #view-atsk {
   --bl-ink: #2a1408; --bl-ink2: #6b3a15;
   --bl-card: linear-gradient(160deg, rgba(255,255,255,.92), rgba(255,247,236,.78));
   --bl-card-bd: rgba(255,255,255,.95);
@@ -155,3 +155,17 @@ html:not([data-theme="light"]) .bl-card.paid .bl-ico, html:not([data-theme="ligh
   .bl-dates { gap: 1rem; }
   .bl-select { min-width: 0; flex: 1 1 100%; }
 }
+
+/* ---------- chip prioritas / status kerja (Pengingat Pekerjaan) ---------- */
+.bl-chips { display: flex; gap: .35rem; flex-wrap: wrap; align-items: center; }
+.bl-pri { display: inline-flex; align-items: center; gap: .3rem; padding: .22rem .6rem; border-radius: 9999px; font-size: .7rem; font-weight: 700; line-height: 1.2; border: 1px solid; }
+.bl-pri i { font-size: .62rem; }
+.bl-pri.high { background: rgba(201,55,61,.14); color: #b4232b; border-color: rgba(201,55,61,.4); }
+.bl-pri.normal { background: rgba(244,162,58,.2); color: #8a4708; border-color: rgba(217,125,38,.45); }
+.bl-pri.low { background: rgba(120,113,108,.14); color: #57534e; border-color: rgba(120,113,108,.35); }
+.bl-pri.doing { background: rgba(47,158,114,.16); color: #1f7a56; border-color: rgba(47,158,114,.42); }
+html:not([data-theme="light"]) .bl-pri.high { color: #ff9aa2; }
+html:not([data-theme="light"]) .bl-pri.normal { color: #ffc97a; }
+html:not([data-theme="light"]) .bl-pri.low { color: #d6d3d1; }
+html:not([data-theme="light"]) .bl-pri.doing { color: #6ee7a0; }
+@media (max-width: 767px) { .bl-bar .bl-select { flex: 1 1 100%; } }
