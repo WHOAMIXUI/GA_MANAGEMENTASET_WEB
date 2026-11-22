@@ -46,6 +46,8 @@
     <link rel="stylesheet" href="css/bills.css">
     <!-- Tampilan mobile (layar <= 767px): bottom navigation, kartu, bottom-sheet -->
     <link rel="stylesheet" href="css/mobile.css">
+    <link rel="stylesheet" href="css/desktop.css">
+    
 </head>
 <body class="h-full overflow-hidden antialiased selection:bg-dobah-400 selection:text-slate-950">
 
@@ -60,12 +62,14 @@
                         <img src="assets/img/logo.png" alt="Dobah" class="w-6 h-6 object-contain">
                     </div>
                     <div>
-                        <span class="font-extrabold text-white text-base tracking-tight">GA X <span class="text-dobah-300">DOBAH</span></span>
+                        <span class="font-extrabold text-white text-base tracking-tight">GA <span class="dk-x">&times;</span> <span class="text-dobah-300">DOBAH</span></span>
                         <p class="text-[10px] text-dobah-200/60 leading-none">CREATED BY DIVISI GA</p>
                     </div>
                 </div>
                 <button onclick="toggleSidebar()" class="md:hidden text-dobah-200/60 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
             </div>
+
+            <div class="dk-donut" aria-hidden="true"><span><img src="assets/img/logo.png" alt=""></span></div>
 
             <nav class="flex-1 overflow-y-auto p-4 space-y-1.5">
                 <p class="px-3 text-[10px] font-bold text-dobah-200/80 uppercase tracking-wider mb-2">Menu Utama</p>
@@ -137,6 +141,11 @@
                     <h1 id="page-title" class="font-brand text-lg font-bold text-white">Dashboard &amp; Status Pengajuan Tiket</h1>
                 </div>
                 <div class="flex items-center gap-3 relative">
+                    <!-- Pencarian global (khusus tampilan desktop) -->
+                    <form class="dk-search" id="dkSearchForm" role="search" autocomplete="off">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        <input type="search" id="dkSearch" placeholder="Cari tiket, kode, pemohon..." aria-label="Pencarian global">
+                    </form>
                     <span id="cloudStatusBadge" class="hidden sm:inline-flex items-center gap-2 bg-cocoa-950 text-dobah-100 border border-white/10 text-xs font-bold px-3.5 py-1.5 rounded-full">Syncing...</span>
 
                     <!-- Ganti tema -->
@@ -155,6 +164,8 @@
                             <p class="text-dobah-300/50 text-center italic py-2">Tidak ada notifikasi baru.</p>
                         </div>
                     </div>
+
+                    <span id="dkAvatar" class="dk-avatar" aria-hidden="true">U</span>
 
                     <button onclick="handleLogout()" class="flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-white/10 text-xs font-semibold text-dobah-200 hover:bg-rose-500/15 hover:text-rose-300 hover:border-rose-500/30 transition-all">
                         <i class="fa-solid fa-right-from-bracket text-[11px]"></i> Logout
@@ -270,6 +281,11 @@
 
         <!-- TAB 2: LIST & METRICS -->
         <section id="view-list" class="space-y-6">
+            <div class="dk-head" hidden>
+                <h2>Ringkasan Tiket</h2>
+                <p>Pantau pengajuan aset &amp; perbaikan dari seluruh cabang.</p>
+            </div>
+
 
             <!-- 5 kartu ringkasan -->
             <div class="grid grid-cols-2 lg:grid-cols-5 gap-4">
@@ -761,6 +777,7 @@
     <script defer src="js/aset/20-tasks.js"></script>
     <script defer src="js/pwa.js"></script>
     <script defer src="js/mobile.js"></script>
+    <script defer src="js/desktop.js"></script>
 
 </body>
 </html>
