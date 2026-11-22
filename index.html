@@ -165,7 +165,17 @@
                         </div>
                     </div>
 
-                    <span id="dkAvatar" class="dk-avatar" aria-hidden="true">U</span>
+                    <div class="dk-user" id="dkUser">
+                        <button type="button" id="dkAvatar" class="dk-avatar" aria-haspopup="true" aria-expanded="false" aria-label="Menu pengguna">U</button>
+                        <div id="dkUserMenu" class="hidden glass-panel dk-user-menu" role="menu">
+                            <div class="dk-user-head">
+                                <span id="dkUserName" class="dk-user-name">User</span>
+                                <span id="dkUserRole" class="dk-user-role">Role</span>
+                            </div>
+                            <button type="button" role="menuitem" onclick="openModal('passwordModal'); window.dkCloseUserMenu && dkCloseUserMenu()" class="dk-user-item"><i class="fa-solid fa-key"></i> Ubah Password</button>
+                            <button type="button" role="menuitem" onclick="handleLogout()" class="dk-user-item dk-user-out"><i class="fa-solid fa-power-off"></i> Keluar (Logout)</button>
+                        </div>
+                    </div>
 
                     <button onclick="handleLogout()" class="flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-white/10 text-xs font-semibold text-dobah-200 hover:bg-rose-500/15 hover:text-rose-300 hover:border-rose-500/30 transition-all">
                         <i class="fa-solid fa-right-from-bracket text-[11px]"></i> Logout
