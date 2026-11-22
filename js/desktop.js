@@ -15,11 +15,24 @@
       }
     });
   }
-  /* avatar topbar mengikuti inisial avatar di sidebar */
-  var src = document.getElementById('userAvatar'), dst = document.getElementById('dkAvatar');
-  if (src && dst) {
-    var sync = function () { dst.textContent = (src.textContent || 'U').trim().charAt(0) || 'U'; };
+  /* avatar + menu pengguna di topbar (pindahan dari profil di dasar sidebar); data mengikuti elemen sidebar yang diisi app.js */
+  var dst = document.getElementById('dkAvatar'), menu = document.getElementById('dkUserMenu');
+  var pairs = [['userAvatar', 'dkAvatar', true], ['displayUserName', 'dkUserName'], ['displayUserRole', 'dkUserRole']];
+  pairs.forEach(function (p) {
+    var a = document.getElementById(p[0]), b = document.getElementById(p[1]);
+    if (!a || !b) return;
+    var sync = function () { var t = (a.textContent || '').trim(); b.textContent = p[2] ? (t.charAt(0) || 'U') : (t || b.textContent); };
     sync();
-    new MutationObserver(sync).observe(src, { childList: true, characterData: true, subtree: true });
+    new MutationObserver(sync).observe(a, { childList: true, characterData: true, subtree: true });
+  });
+  if (dst && menu) {
+    window.dkCloseUserMenu = function () { menu.classList.add('hidden'); dst.setAttribute('aria-expanded', 'false'); };
+    dst.addEventListener('click', function (e) {
+      e.stopPropagation();
+      var open = menu.classList.toggle('hidden') === false;
+      dst.setAttribute('aria-expanded', open ? 'true' : 'false');
+    });
+    document.addEventListener('click', function (e) { if (!menu.contains(e.target)) window.dkCloseUserMenu(); });
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape') window.dkCloseUserMenu(); });
   }
 })();
