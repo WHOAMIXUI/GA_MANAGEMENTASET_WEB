@@ -733,6 +733,7 @@
             const isGA = role === 'General Affair Manager';
 
             const STAT = TSTAT;
+            const TPRI = { Critical: ['Darurat', 'critical'], High: ['Tinggi', 'high'], Medium: ['Sedang', 'medium'], Low: ['Rendah', 'low'] };
 
             pageData.forEach(req => {
                 const actIdx = appState.requests.indexOf(req);
@@ -760,6 +761,7 @@
                             <span class="text-[11px] text-dobah-300 font-semibold uppercase"><i class="fa-solid fa-location-dot mr-1 text-[10px]"></i>${esc(req.branch)}</span>
                         </td>
                         <td class="p-4 text-center"><span class="bg-cocoa-950 text-dobah-100 border border-white/10 px-3 py-1 rounded-full text-[11px] font-bold">${totalItemsCount} Item</span></td>
+                        <td class="p-4 text-center dk-col">${TPRI[req.urgency] ? `<span class="dk-pri dk-pri-${TPRI[req.urgency][1]}">${TPRI[req.urgency][0]}</span>` : '-'}</td>
                         <td class="p-4 w-56">
                             <div class="flex justify-between text-[10px] font-bold text-dobah-100 mb-1.5">
                                 <span>${completedCount}/${totalItemsCount} Selesai</span>
