@@ -90,7 +90,8 @@
       ? `<div class="bl-d"><span>Selesai</span><b>${fd(last ? last.doneAt : t.due)}</b></div>`
       : `<div class="bl-d"><span>Tenggat</span><b>${fd(t.due)}</b><small>${when(t)}</small></div>`;
     const chips = `<span class="bl-pri ${t.prio || 'normal'}"><i class="fa-solid fa-flag"></i>${PRIO[t.prio] || PRIO.normal}</span>${t.doing && !t.done ? '<span class="bl-pri doing"><i class="fa-solid fa-gears"></i>Dikerjakan</span>' : ''}`;
-    return `<article class="bl-card ${s === 'done' ? 'paid' : s}">${RIB[s] ? `<span class="bl-rib">${RIB[s]}</span>` : ''}
+    act.push(`<span class="bl-tools">${s === 'soon' ? `<button type="button" class="bl-ic" onclick="TK.detail('${id}')" title="Lihat detail" aria-label="Lihat detail"><i class="fa-solid fa-circle-info"></i></button>` : ''}<button type="button" class="bl-ic" onclick="TK.edit('${id}')" title="Edit" aria-label="Edit"><i class="fa-solid fa-pen"></i></button></span>`);
+    return `<article class="bl-card bl-click ${s === 'done' ? 'paid' : s}" onclick="if(!event.target.closest('button'))TK.detail('${id}')" title="Klik untuk lihat detail">${RIB[s] ? `<span class="bl-rib">${RIB[s]}</span>` : ''}
       <div class="bl-head"><span class="bl-ico" aria-hidden="true"><i class="fa-solid ${CI[t.cat] || CI.Lainnya}"></i></span><h3 class="bl-name" title="${esc(t.name)}">${esc(t.name)}</h3></div>
       <div class="bl-body"><div class="bl-who"><div>PIC: <b>${esc(t.pic || '-')}</b></div><div>Cabang: <b>${esc(t.branch || 'Umum')}</b></div>${t.asset ? `<div>Aset: <b>${esc(t.asset)}</b></div>` : ''}</div>
         <div class="bl-dates"><div class="bl-d"><span>Berulang</span><b>${RECUR[t.recur] || RECUR.once}</b></div>${dateCol}</div></div>

@@ -88,7 +88,8 @@
     const dateCol = b.done
       ? `<div class="bl-d"><span>Dibayar</span><b>${fd(last ? last.paidAt : b.due)}</b></div>`
       : `<div class="bl-d"><span>Jatuh Tempo</span><b>${fd(b.due)}</b><small>${when(b)}</small></div>`;
-    return `<article class="bl-card ${SCLS[s]}">${RIB[s] ? `<span class="bl-rib">${RIB[s]}</span>` : ''}
+    act.push(`<span class="bl-tools">${s === 'soon' ? `<button type="button" class="bl-ic" onclick="BL.detail('${b.id}')" title="Lihat detail" aria-label="Lihat detail"><i class="fa-solid fa-circle-info"></i></button>` : ''}<button type="button" class="bl-ic" onclick="BL.edit('${b.id}')" title="Edit" aria-label="Edit"><i class="fa-solid fa-pen"></i></button></span>`);
+    return `<article class="bl-card bl-click ${SCLS[s]}" onclick="if(!event.target.closest('button'))BL.detail('${b.id}')" title="Klik untuk lihat detail">${RIB[s] ? `<span class="bl-rib">${RIB[s]}</span>` : ''}
       <div class="bl-head"><span class="bl-ico" aria-hidden="true"><i class="fa-solid ${CI[b.cat] || CI.Lainnya}"></i></span><h3 class="bl-name" title="${esc(b.name)}">${esc(b.name)}</h3></div>
       <div class="bl-body"><div class="bl-who"><div>Vendor: <b>${esc(b.vendor || '-')}</b></div><div>Cabang: <b>${esc(b.branch || 'Umum')}</b></div></div>
         <div class="bl-dates"><div class="bl-d"><span>Berulang</span><b>${RECUR[b.recur] || RECUR.once}</b></div>${dateCol}</div></div>
