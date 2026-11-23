@@ -169,3 +169,13 @@ html:not([data-theme="light"]) .bl-pri.normal { color: #ffc97a; }
 html:not([data-theme="light"]) .bl-pri.low { color: #d6d3d1; }
 html:not([data-theme="light"]) .bl-pri.doing { color: #6ee7a0; }
 @media (max-width: 767px) { .bl-bar .bl-select { flex: 1 1 100%; } }
+
+/* Kartu bisa diklik (pratinjau detail) + tombol ikon Lihat / Edit */
+.bl-card.bl-click { cursor: pointer; transition: box-shadow .15s, transform .15s; }
+.bl-card.bl-click:hover { box-shadow: 0 10px 24px -12px rgba(130,70,15,.45); }
+.bl-tools { display: inline-flex; gap: .3rem; align-items: center; }
+.bl-ic { width: 1.7rem; height: 1.7rem; flex-shrink: 0; display: inline-grid; place-items: center; border-radius: 9999px; font-size: .72rem; cursor: pointer;
+  background: var(--bl-chip); color: var(--bl-ink); border: 1px solid var(--bl-chip-bd); box-shadow: 0 2px 6px -2px rgba(130,70,15,.22); transition: background .15s, transform .15s; }
+.bl-ic:hover { background: rgba(244,162,58,.35); transform: translateY(-1px); }
+.bl-ic:focus-visible { outline: 2px solid #f4a23a; outline-offset: 2px; }
+html:not([data-theme="light"]) .bl-card.bl-click:hover { box-shadow: 0 0 0 1px rgba(244,162,58,.45), 0 12px 26px -14px rgba(0,0,0,.8); }
