@@ -7,6 +7,7 @@
 
 /* elemen tambahan desktop: tersembunyi di mana pun kecuali di desktop */
 .dk-donut, .dk-search, .dk-user, .dk-head { display: none; }
+.dk-cnt, .dk-col, .dk-tbl-head { display: none !important; }       /* !important: aturan kartu-tabel di mobile.css lebih kuat */
 
 @media (min-width: 768px) and (not ((hover: none) and (pointer: coarse) and (max-width: 1100px))) {
 
@@ -159,22 +160,26 @@
 
   /* ---------- KARTU KPI berpendar (Dashboard Tiket) ---------- */
   #view-list > .grid { gap: 1rem; }
-  :root:not([data-theme="light"]) #view-list > .grid > .tk-card {
+  /* tata letak kartu: berlaku di semua tema */
+  #view-list > .grid > .tk-card {
     position: relative; overflow: hidden; display: grid;
-    grid-template-columns: 1fr; grid-template-areas: "ico" "num" "lab" "sub"; align-content: start; row-gap: 0;
-    min-height: 9.4rem; padding: 1rem 1.15rem 1.05rem; border-radius: 14px; cursor: pointer;
+    grid-template-columns: 1fr auto; grid-template-areas: "lab ico" "num num" "sub sub"; align-content: start; align-items: start; row-gap: 0;
+    min-height: 8.4rem; padding: 1rem 1.15rem 1rem; border-radius: 14px; cursor: pointer; transition: box-shadow .2s, border-color .2s;
+  }
+  /* warna & pendar: khusus tema gelap */
+  :root:not([data-theme="light"]) #view-list > .grid > .tk-card {
     background: linear-gradient(160deg, rgba(76,44,27,.92), rgba(48,27,17,.94));
     border: 1.5px solid rgba(244,162,58,.62);
     box-shadow: 0 0 22px -5px rgba(var(--dk-glow),.38), inset 0 0 22px rgba(var(--dk-glow),.07), 0 14px 30px -18px rgba(0,0,0,.8);
-    transition: box-shadow .2s, border-color .2s;
   }
-  #view-list > .grid > .tk-card:hover { border-color: rgba(255,190,100,.9); box-shadow: 0 0 30px -3px rgba(var(--dk-glow),.55), inset 0 0 22px rgba(var(--dk-glow),.1), 0 14px 30px -18px rgba(0,0,0,.8); transform: none; }
+
+  :root:not([data-theme="light"]) #view-list > .grid > .tk-card:hover { border-color: rgba(255,190,100,.9); box-shadow: 0 0 30px -3px rgba(var(--dk-glow),.55), inset 0 0 22px rgba(var(--dk-glow),.1), 0 14px 30px -18px rgba(0,0,0,.8); transform: none; }
   #view-list > .grid > .tk-card > div { display: contents; }                        /* susun ulang: ikon, angka, label */
-  #view-list > .grid > .tk-card .tk-ico { grid-area: ico; width: 2.5rem; height: 2.5rem; border-radius: 11px; font-size: 1rem; margin-bottom: .85rem;
+  #view-list > .grid > .tk-card .tk-ico { grid-area: ico; justify-self: end; width: 2.1rem; height: 2.1rem; border-radius: 10px; font-size: .85rem; margin-bottom: .45rem;
     box-shadow: 0 0 14px -3px currentColor; }
-  #view-list > .grid > .tk-card .tk-num { grid-area: num; font-size: 2rem; letter-spacing: -.01em; }
-  #view-list > .grid > .tk-card .tk-label { grid-area: lab; text-transform: none; letter-spacing: 0; font-size: .82rem; font-weight: 600; margin-top: .35rem; }
-  #view-list > .grid > .tk-card .tk-sub { grid-area: sub; margin-top: .2rem; font-size: .7rem; max-width: 100%; }
+  #view-list > .grid > .tk-card .tk-num { grid-area: num; font-size: 2.05rem; line-height: 1.15; letter-spacing: -.01em; }
+  #view-list > .grid > .tk-card .tk-label { grid-area: lab; text-transform: uppercase; letter-spacing: .05em; font-size: .68rem; font-weight: 800; margin-top: .3rem; min-height: 2.1rem; line-height: 1.25; }
+  #view-list > .grid > .tk-card .tk-sub { grid-area: sub; margin-top: .1rem; font-size: .7rem; max-width: 100%; }
   :root:not([data-theme="light"]) #view-list > .grid > .tk-card .tk-label { color: rgba(237,213,179,.88); }
   :root:not([data-theme="light"]) #view-list > .grid > .tk-card .tk-sub { color: rgba(237,213,179,.55); }
   html[data-theme="light"] #view-list > .grid > .tk-card .tk-label { color: #5c3113; }
@@ -182,7 +187,7 @@
 
   /* garis tren kecil di kanan bawah (hiasan, bukan data) */
   #view-list > .grid > .tk-card::after {
-    content: ""; display: block !important; position: absolute; right: 14px; top: 3.9rem; bottom: auto; left: auto;
+    content: ""; display: block !important; position: absolute; right: 14px; top: 3.3rem; bottom: auto; left: auto;
     width: 70px; height: 32px; border-radius: 0; background-repeat: no-repeat; background-size: 100% 100%; opacity: .95; pointer-events: none;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 86 38'%3E%3Cpath d='M2 32 L16 24 L28 28 L44 12 L58 20 L72 8 L84 4 L84 38 L2 38Z' fill='%23f4a23a' fill-opacity='.14'/%3E%3Cpath d='M2 32 L16 24 L28 28 L44 12 L58 20 L72 8 L84 4' fill='none' stroke='%23f4a23a' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
   }
@@ -229,6 +234,7 @@
   :root:not([data-theme="light"]) .tk-thead th, main table thead th {
     font-family: 'Plus Jakarta Sans', sans-serif; text-transform: none; letter-spacing: 0; font-size: .76rem; font-weight: 700;
   }
+  .tk-thead th { text-transform: uppercase !important; letter-spacing: .05em !important; font-size: .68rem !important; font-weight: 800 !important; }
   :root:not([data-theme="light"]) .tk-thead th { background: rgba(25,13,8,.38); color: rgba(237,213,179,.78); border-bottom: 1px solid rgba(255,255,255,.07); padding-top: .95rem; padding-bottom: .95rem; }
   #requestsTableBody tr { transition: background .15s; }
   :root:not([data-theme="light"]) #requestsTableBody tr:hover { background: rgba(244,162,58,.08); }
@@ -239,6 +245,80 @@
   .tk-del { border-radius: 8px; }
   .tk-bar { height: .4rem; }
   :root:not([data-theme="light"]) #ticketTablePanel > div.bg-cocoa-950\/50 { background: rgba(25,13,8,.3); }
+
+  /* alert card: lencana "Critical" seperti di desain, tanpa garis tren */
+  #view-list > .grid > .tk-alert::after { display: none !important; }
+  #view-list > .grid > .tk-alert::before {
+    content: "Critical"; position: absolute; right: 14px; top: 3.9rem; padding: .18rem .65rem; border-radius: 999px;
+    font-size: .65rem; font-weight: 700; letter-spacing: .02em; color: #fff; background: rgba(255,255,255,.22); border: 1px solid rgba(255,255,255,.3);
+  }
+
+  /* ---------- Daftar & Status: tab berangka + filter berlabel dalam satu kartu ---------- */
+  #view-list.dk-on #tkFilterTop { border-bottom-left-radius: 0; border-bottom-right-radius: 0; border-bottom: 1px solid rgba(255,255,255,.08); padding: 1rem 1.25rem .8rem; }
+  #view-list.dk-on #tkFilterBottom { margin-top: 0 !important; border-top-left-radius: 0; border-top-right-radius: 0; border-top: 0; padding: .95rem 1.25rem 1.1rem; align-items: flex-end; gap: 1rem; }
+  html[data-theme="light"] #view-list.dk-on #tkFilterTop { border-bottom-color: rgba(110,60,15,.14); }
+  #view-list.dk-on #tkFilterRight { display: none; }                               /* pencarian ada di topbar */
+
+  #view-list .tk-seg { background: transparent !important; border: 0 !important; box-shadow: none !important; padding: 0; gap: .3rem; flex-wrap: wrap; }
+  #view-list .tk-seg button { display: inline-flex; align-items: center; gap: .5rem; padding: .5rem .85rem; border-radius: 11px; font-size: .8rem; font-weight: 600; }
+  #view-list .tk-seg button.is-active { background: linear-gradient(180deg, #f8b150, #f4a23a) !important; color: #2a1408 !important; box-shadow: 0 8px 18px -10px rgba(244,162,58,.8) !important; }
+  .dk-cnt { display: inline-grid !important; place-items: center; min-width: 1.35rem; height: 1.2rem; padding: 0 .4rem; border-radius: 7px; font-size: .68rem; font-weight: 800; background: rgba(255,255,255,.1); }
+  .tk-seg button.is-active .dk-cnt { background: rgba(42,20,8,.18); color: #2a1408; }
+  .tk-seg [data-status="Menunggu"] .dk-cnt { background: rgba(244,162,58,.22); color: #ffc46b; }
+  .tk-seg [data-status="Approval Manager Ops"] .dk-cnt { background: rgba(111,183,255,.2); color: #8cc8ff; }
+  .tk-seg [data-status="Approval Finance"] .dk-cnt { background: rgba(167,139,250,.22); color: #c4b5fd; }
+  .tk-seg [data-status="Dikirim"] .dk-cnt { background: rgba(192,132,252,.2); color: #d8b4fe; }
+  .tk-seg [data-status="Diterima"] .dk-cnt { background: rgba(110,231,160,.2); color: #86efac; }
+  .tk-seg [data-status="Ditolak"] .dk-cnt { background: rgba(255,255,255,.1); color: rgba(237,213,179,.8); }
+  .tk-seg button.is-active .dk-cnt { background: rgba(42,20,8,.2) !important; color: #2a1408 !important; }
+  html[data-theme="light"] .tk-seg [data-status="Menunggu"] .dk-cnt { color: #9a5208; }
+  html[data-theme="light"] .tk-seg [data-status="Approval Manager Ops"] .dk-cnt { color: #1d5fa8; }
+  html[data-theme="light"] .tk-seg [data-status="Approval Finance"] .dk-cnt, html[data-theme="light"] .tk-seg [data-status="Dikirim"] .dk-cnt { color: #6b3fb5; }
+  html[data-theme="light"] .tk-seg [data-status="Diterima"] .dk-cnt { color: #1a7a4f; }
+  html[data-theme="light"] .tk-seg [data-status="Ditolak"] .dk-cnt { color: #5c4a3a; background: rgba(110,60,15,.1); }
+  html[data-theme="light"] .tk-seg button.is-active .dk-cnt { color: #2a1408 !important; }
+
+  .dk-fld { display: flex; flex-direction: column; gap: .3rem; }
+  .dk-lbl, #view-list.dk-on #tkFilterBottom label { font-size: .7rem; font-weight: 700; letter-spacing: .01em; }
+  .dk-lbl { color: rgba(237,213,179,.72); }
+  html[data-theme="light"] .dk-lbl { color: #5c3113; }
+  #view-list.dk-on #tkFilterBottom label { display: flex; flex-direction: column; align-items: flex-start; gap: .3rem; }
+  #view-list.dk-on #tkFilterBottom { flex-wrap: nowrap; }
+  #view-list.dk-on #tkFilterBottom select, #view-list.dk-on #tkFilterBottom input[type="date"] { height: 2.5rem !important; padding-top: 0 !important; padding-bottom: 0 !important; font-size: .8rem; flex: none; width: 100%; min-width: 0; }
+  #view-list.dk-on #tkFilterBottom .dk-fld { flex: 1 1 11rem; min-width: 8rem; max-width: 15rem; }
+  #view-list.dk-on #tkFilterBottom label { flex: 0 1 10rem; min-width: 8.5rem; }
+  #view-list.dk-on #tkFilterBottom button[onclick="clearFilters()"] { margin-left: auto; height: 2.5rem; flex: 0 0 auto; }
+  #view-list.dk-on #tkFilterBottom button[onclick^="exportTicketsCSV"] { height: 2.5rem; flex: 0 0 auto; }
+  :root:not([data-theme="light"]) #view-list.dk-on #tkFilterBottom button[onclick^="exportTicketsCSV"],
+  html[data-theme="light"] #view-list.dk-on #tkFilterBottom button[onclick^="exportTicketsCSV"] {
+    background: linear-gradient(180deg, #2bb785, #1f9d6b); color: #fff; border-color: transparent; box-shadow: 0 8px 18px -10px rgba(31,157,107,.8);
+  }
+
+  /* ---------- Daftar Pengajuan Tiket: judul + tombol, kolom prioritas ---------- */
+  .dk-tbl-head { display: flex !important; align-items: center; justify-content: space-between; gap: 1rem; padding: 1.1rem 1.5rem; border-bottom: 1px solid rgba(255,255,255,.07); }
+  .dk-tbl-head h3 { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 1.02rem; font-weight: 800; line-height: 1.2; }
+  .dk-tbl-head p { margin-top: .2rem; font-size: .74rem; font-weight: 500; opacity: .65; }
+  .dk-tbl-head p b { font-weight: 800; opacity: 1; }
+  :root:not([data-theme="light"]) .dk-tbl-head h3 { color: #fff; }
+  html[data-theme="light"] .dk-tbl-head { border-bottom-color: rgba(110,60,15,.14); }
+  html[data-theme="light"] .dk-tbl-head h3 { color: #2a1408; }
+  th.dk-col, td.dk-col { display: table-cell !important; }
+  #requestsTableBody .tk-pill { white-space: nowrap; border-radius: 999px; }
+  #ticketTablePanel table { min-width: 0; }
+  #ticketTablePanel .tk-thead th:not(:first-child):not(:last-child), #requestsTableBody td:not(:first-child):not(:last-child) { padding-left: .6rem; padding-right: .6rem; }
+  #ticketTablePanel .w-56 { width: 10.5rem; }
+  #requestsTableBody .tk-pill { font-size: .68rem; padding: .3rem .65rem; }
+
+  .dk-pri { display: inline-flex; align-items: center; gap: .35rem; padding: .25rem .7rem; border-radius: 8px; font-size: .7rem; font-weight: 700; border: 1px solid transparent; white-space: nowrap; }
+  .dk-pri::before { content: ""; width: .42rem; height: .42rem; border-radius: 50%; background: currentColor; }
+  .dk-pri-critical { background: rgba(244,63,94,.16); color: #fda4af; border-color: rgba(251,113,133,.4); }
+  .dk-pri-high { background: rgba(244,162,58,.16); color: #ffc46b; border-color: rgba(244,162,58,.4); }
+  .dk-pri-medium { background: rgba(111,183,255,.14); color: #8cc8ff; border-color: rgba(111,183,255,.35); }
+  .dk-pri-low { background: rgba(255,255,255,.07); color: rgba(237,213,179,.75); border-color: rgba(255,255,255,.14); }
+  html[data-theme="light"] .dk-pri-critical { background: rgba(244,63,94,.1); color: #be123c; border-color: rgba(244,63,94,.35); }
+  html[data-theme="light"] .dk-pri-high { background: rgba(244,162,58,.18); color: #9a5208; }
+  html[data-theme="light"] .dk-pri-medium { background: rgba(59,130,246,.1); color: #1d5fa8; border-color: rgba(59,130,246,.3); }
+  html[data-theme="light"] .dk-pri-low { background: rgba(110,60,15,.07); color: #6b5a4a; border-color: rgba(110,60,15,.18); }
 
   /* tabel lain (master data, registry, dsb.) */
   :root:not([data-theme="light"]) main table thead tr.bg-cocoa-900 { background: rgba(25,13,8,.38); }
