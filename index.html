@@ -293,7 +293,7 @@
         <section id="view-list" class="space-y-6">
             <div class="dk-head" hidden>
                 <h2>Ringkasan Tiket</h2>
-                <p>Pantau pengajuan aset &amp; perbaikan dari seluruh cabang.</p>
+                <p>Pantau pengajuan aset &amp; perbaikan dari seluruh cabang Donat Bahagia.</p>
             </div>
 
 
@@ -352,22 +352,22 @@
             </div>
 
             <!-- Bar filter: tab status + ekspor + cabang + cari -->
-            <div class="glass-panel p-4 flex flex-wrap items-center justify-between gap-3">
+            <div id="tkFilterTop" class="glass-panel p-4 flex flex-wrap items-center justify-between gap-3">
                 <div class="flex flex-wrap items-center gap-2">
                 <div class="tk-seg" role="tablist" aria-label="Filter status tiket">
-                    <button type="button" role="tab" data-status="" class="is-active" onclick="setStatusTab('')">Semua</button>
-                    <button type="button" role="tab" data-status="Menunggu" onclick="setStatusTab('Menunggu')">Menunggu</button>
-                    <button type="button" role="tab" data-status="Approval Manager Ops" onclick="setStatusTab('Approval Manager Ops')">Approval Ops</button>
-                    <button type="button" role="tab" data-status="Approval Finance" onclick="setStatusTab('Approval Finance')">Approval Finance</button>
-                    <button type="button" role="tab" data-status="Dikirim" onclick="setStatusTab('Dikirim')">Dikirim</button>
-                    <button type="button" role="tab" data-status="Diterima" onclick="setStatusTab('Diterima')">Diterima</button>
-                    <button type="button" role="tab" data-status="Ditolak" onclick="setStatusTab('Ditolak')">Ditolak</button>
+                    <button type="button" role="tab" data-status="" class="is-active" onclick="setStatusTab('')">Semua<span class="dk-cnt" aria-hidden="true"></span></button>
+                    <button type="button" role="tab" data-status="Menunggu" onclick="setStatusTab('Menunggu')">Menunggu<span class="dk-cnt" aria-hidden="true"></span></button>
+                    <button type="button" role="tab" data-status="Approval Manager Ops" onclick="setStatusTab('Approval Manager Ops')">Approval Ops<span class="dk-cnt" aria-hidden="true"></span></button>
+                    <button type="button" role="tab" data-status="Approval Finance" onclick="setStatusTab('Approval Finance')">Approval Finance<span class="dk-cnt" aria-hidden="true"></span></button>
+                    <button type="button" role="tab" data-status="Dikirim" onclick="setStatusTab('Dikirim')">Dikirim<span class="dk-cnt" aria-hidden="true"></span></button>
+                    <button type="button" role="tab" data-status="Diterima" onclick="setStatusTab('Diterima')">Diterima<span class="dk-cnt" aria-hidden="true"></span></button>
+                    <button type="button" role="tab" data-status="Ditolak" onclick="setStatusTab('Ditolak')">Ditolak<span class="dk-cnt" aria-hidden="true"></span></button>
                 </div>
                 <button type="button" id="urgentChip" onclick="setStatusTab('')" class="hidden items-center gap-2 px-3 py-2 rounded-full bg-rose-500/20 border border-rose-400/40 text-rose-200 text-xs font-bold" title="Hapus filter darurat"><i class="fa-solid fa-triangle-exclamation"></i> Darurat/Tinggi <i class="fa-solid fa-xmark text-[10px]"></i></button>
                 <button type="button" id="nrMarkAll" onclick="NR.markAll()" class="nr-markall" style="display:none" title="Hapus tanda BARU dari semua tiket"><i class="fa-solid fa-check-double"></i><span>Tandai semua dilihat</span></button>
                 </div>
 
-                <div class="flex flex-wrap items-center gap-3 w-full md:w-auto">
+                <div id="tkFilterRight" class="flex flex-wrap items-center gap-3 w-full md:w-auto">
                     <button type="button" onclick="exportTicketsCSV()" class="modern-button bg-cocoa-900 hover:bg-cocoa-950 text-dobah-100 text-xs font-bold px-4 py-2.5 border border-white/10 flex items-center gap-2 flex-shrink-0">
                         <i class="fa-solid fa-download text-[11px]"></i> Ekspor CSV
                     </button>
@@ -380,7 +380,7 @@
             </div>
 
             <!-- Filter tambahan: prioritas + rentang tanggal + reset -->
-            <div class="glass-panel p-4 flex flex-wrap items-center gap-3">
+            <div id="tkFilterBottom" class="glass-panel p-4 flex flex-wrap items-center gap-3">
                 <select id="filterUrgency" onchange="applyTableFilters()" aria-label="Filter prioritas" class="glass-input px-3.5 py-2.5 text-xs sm:text-sm font-semibold min-w-[170px]">
                     <option value="" class="bg-cocoa-900">Semua prioritas</option>
                     <option value="Critical" class="bg-cocoa-900">Darurat</option>
@@ -401,6 +401,10 @@
 
             <!-- Tabel -->
             <div id="ticketTablePanel" class="glass-panel overflow-hidden scroll-mt-4">
+                <div class="dk-tbl-head">
+                    <div><h3>Daftar Pengajuan Tiket</h3><p id="dkTblSub">Menampilkan 0 dari 0 tiket pengajuan</p></div>
+                    <button type="button" onclick="switchTab('form')" class="modern-button bg-dobah-400 text-cocoa-950 text-xs font-bold px-4 py-2.5 flex items-center gap-2"><i class="fa-solid fa-plus text-[11px]"></i> Buat Tiket Baru</button>
+                </div>
                 <div class="overflow-x-auto">
                     <table class="w-full min-w-[880px] text-left border-collapse">
                         <thead>
@@ -408,6 +412,7 @@
                                 <th class="p-4 pl-6 sortable" onclick="handleSort('id')">Kode Tiket &amp; Tanggal <i class="fa-solid fa-sort ml-1 text-dobah-300/30" id="sortIcon-id"></i></th>
                                 <th class="p-4 sortable" onclick="handleSort('division')">Pemohon &amp; Cabang <i class="fa-solid fa-sort ml-1 text-dobah-300/30" id="sortIcon-division"></i></th>
                                 <th class="p-4 text-center">Jumlah Item</th>
+                                <th class="p-4 text-center dk-col">Prioritas</th>
                                 <th class="p-4 w-56">Progress Perbaikan</th>
                                 <th class="p-4 text-center sortable" onclick="handleSort('status')">Status Tiket <i class="fa-solid fa-sort ml-1 text-dobah-300/30" id="sortIcon-status"></i></th>
                                 <th class="p-4 pr-6 text-right">Aksi</th>
