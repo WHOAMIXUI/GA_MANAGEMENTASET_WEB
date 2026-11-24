@@ -196,6 +196,7 @@
                 <div class="flex flex-wrap gap-2.5 mt-4">
                     <button type="button" onclick="switchTab('form')" class="welcome-btn dark"><i class="fa-solid fa-plus mr-1.5"></i>Buat permintaan</button>
                     <button type="button" onclick="switchTab('list')" class="welcome-btn light">Cek status tiket</button>
+                    <button type="button" onclick="openTutorial()" class="welcome-btn light"><svg class="tut-ico" viewBox="0 0 24 24" width="13" height="13" aria-hidden="true"><path d="M8 5v14l11-7z" fill="currentColor"/></svg>Video tutorial</button>
                 </div>
             </div>
             <div class="welcome-art" aria-hidden="true"><img data-logo="icon" alt=""></div>
@@ -212,6 +213,7 @@
                     </div>
                     <h2 class="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">Pengajuan Permintaan Aset Baru / Perbaikan</h2>
                     <p class="text-xs sm:text-sm text-dobah-200/70 font-medium mt-1">Lengkapi rincian unit, perkiraan biaya, serta foto bukti kerusakan untuk persetujuan General Affair.</p>
+                    <button type="button" onclick="openTutorial()" class="tut-btn"><svg class="tut-ico" viewBox="0 0 24 24" width="13" height="13" aria-hidden="true"><path d="M8 5v14l11-7z" fill="currentColor"/></svg>Lihat video tutorial pengajuan</button>
                 </div>
                 <div class="flex items-center space-x-2.5 text-xs font-mono font-bold bg-cocoa-900/80 px-4 py-2.5 rounded-xl border border-white/10 relative z-10">
                     <i class="fa-solid fa-calendar-day text-dobah-400"></i>
@@ -767,6 +769,22 @@
     </div>
 
     <!-- APPLICATION LOGIC -->
+    <!-- Video tutorial pengajuan -->
+    <div id="tutorialModal" class="tut-modal" hidden role="dialog" aria-modal="true" aria-labelledby="tutTitle">
+        <div class="tut-backdrop" onclick="closeTutorial()"></div>
+        <div class="tut-box">
+            <div class="tut-head">
+                <h3 id="tutTitle">Video Tutorial: Pengajuan Aset Baru / Perbaikan</h3>
+                <button type="button" id="tutClose" class="tut-x" onclick="closeTutorial()" aria-label="Tutup video"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <video id="tutVideo" controls playsinline preload="none" poster="assets/video/tutorial-poster.jpg">
+                <source src="assets/video/tutorial-pengajuan.mp4" type="video/mp4">
+                Browser kamu belum mendukung pemutar video.
+            </video>
+            <p class="tut-foot">Video simulasi memakai data contoh. Tekan Esc atau klik di luar kotak untuk menutup.</p>
+        </div>
+    </div>
+
     <script defer src="js/app.js"></script>
     <script defer src="js/new-requests.js"></script>
     <script defer src="js/aset/01-core.js"></script>
@@ -793,6 +811,7 @@
     <script defer src="js/pwa.js"></script>
     <script defer src="js/mobile.js"></script>
     <script defer src="js/desktop.js"></script>
+    <script defer src="js/tutorial.js"></script>
 
 </body>
 </html>

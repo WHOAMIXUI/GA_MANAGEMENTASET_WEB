@@ -1,11 +1,11 @@
 /* Service worker GA Aset: bisa di-install, tahan koneksi buruk, dan menerima push.
    Naikkan VER setiap rilis supaya cache lama dibuang. */
-const VER = 'ga-aset-v25';
+const VER = 'ga-aset-v26';
 const SHELL_CACHE = VER + '-shell';
 const CDN_CACHE = VER + '-cdn';
 const SHELL = [
   './', 'index.html', 'manifest.webmanifest',
-  'css/style.css', 'css/tailwind.css', 'css/theme.css', 'css/fontawesome-subset.css', 'css/features.css', 'css/bills.css', 'css/mobile.css', 'css/desktop.css', 'js/desktop.js',
+  'css/style.css', 'css/tailwind.css', 'css/theme.css', 'css/fontawesome-subset.css', 'css/features.css', 'css/bills.css', 'css/mobile.css', 'css/desktop.css', 'js/desktop.js', 'js/tutorial.js', 'assets/video/tutorial-poster.jpg',
   'assets/fonts/fa-solid-subset.woff2', 'assets/fonts/fa-regular-subset.woff2', 'assets/fonts/fa-brands-subset.woff2',
   'assets/img/logo.png', 'assets/img/logo-2.png', 'assets/img/icon-192.png', 'assets/img/icon-512.png',
   'js/theme.js', 'js/firebase-init.js', 'js/app.js', 'js/new-requests.js', 'js/pwa.js', 'js/mobile.js', 'js/notify-config.js',
@@ -64,6 +64,8 @@ self.addEventListener('fetch', e => {
   const url = new URL(req.url);
   if (url.origin === self.location.origin) {
     if (url.pathname.endsWith('/sw.js')) return;
+    // Video & permintaan range (seek) langsung ke jaringan: respons 206 tidak bisa disimpan di cache.
+    if (req.headers.has('range') || /\.(mp4|webm)$/i.test(url.pathname)) return;
     const nav = req.mode === 'navigate';
     e.respondWith(networkFirst(req, SHELL_CACHE, nav ? 'index.html' : null));
   } else if (CDN_HOSTS.includes(url.hostname)) {
