@@ -17,3 +17,23 @@
 /* utilitas yang belum ada di css/tailwind.css */
 .items-end{align-items:flex-end}.line-through{text-decoration-line:line-through}.max-h-56{max-height:14rem}.mb-4{margin-bottom:1rem}.py-8{padding-top:2rem;padding-bottom:2rem}
 .min-w-\[140px\]{min-width:140px}.min-w-\[160px\]{min-width:160px}
+
+/* ---- Video tutorial ---- */
+.tut-btn{display:inline-flex;align-items:center;gap:.5rem;margin-top:.9rem;padding:.55rem 1rem;border-radius:999px;font-size:.78rem;font-weight:800;cursor:pointer;
+  background:rgba(244,162,58,.16);color:#f4a23a;border:1px solid rgba(244,162,58,.5);transition:background .15s,transform .15s}
+.tut-btn:hover{background:rgba(244,162,58,.28);transform:translateY(-1px)}
+.tut-btn:focus-visible,.tut-x:focus-visible{outline:2px solid #f4a23a;outline-offset:2px}
+html[data-theme="light"] .tut-btn{color:#84471b;background:rgba(244,162,58,.22);border-color:rgba(168,93,34,.45)}
+.tut-ico{flex:none}
+.welcome-btn .tut-ico{display:inline-block;margin-right:.4rem;vertical-align:-1px}.welcome-btn{white-space:nowrap}
+.tut-modal{position:fixed;inset:0;z-index:9000;display:flex;align-items:center;justify-content:center;padding:1rem}
+.tut-modal[hidden]{display:none}
+.tut-backdrop{position:absolute;inset:0;background:rgba(15,7,3,.78);-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px)}
+.tut-box{position:relative;width:min(960px,100%);max-height:100%;overflow:auto;border-radius:18px;background:#24140c;border:1px solid rgba(244,162,58,.4);box-shadow:0 30px 80px rgba(0,0,0,.65);color:#f7ebd9}
+.tut-head{display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:.9rem 1.1rem .9rem 1.3rem;border-bottom:1px solid rgba(255,255,255,.08)}
+.tut-head h3{font-size:.95rem;font-weight:800;line-height:1.3;color:#fff}
+.tut-x{flex:none;width:2.2rem;height:2.2rem;border-radius:50%;display:grid;place-items:center;cursor:pointer;background:rgba(255,255,255,.08);color:#f7ebd9;border:1px solid rgba(255,255,255,.12)}
+.tut-x:hover{background:rgba(244,63,94,.25)}
+.tut-box video{display:block;width:100%;aspect-ratio:16/9;background:#000}
+.tut-foot{padding:.7rem 1.3rem .9rem;font-size:.72rem;color:rgba(237,213,179,.65)}
+@media (max-width:640px){.tut-modal{padding:.5rem}.tut-head h3{font-size:.82rem}}
