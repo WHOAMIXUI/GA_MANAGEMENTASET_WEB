@@ -199,8 +199,12 @@
   #view-list > .grid > .tk-card:nth-child(3)::after {
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 86 38'%3E%3Cpath d='M2 30 L20 22 L34 26 L48 14 L64 18 L84 6 L84 38 L2 38Z' fill='%236fb7ff' fill-opacity='.13'/%3E%3Cpath d='M2 30 L20 22 L34 26 L48 14 L64 18 L84 6' fill='none' stroke='%236fb7ff' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
   }
-  #view-list > .grid > .tk-card:nth-child(4) { --dk-glow: 110,231,160; }
+  #view-list > .grid > .tk-card:nth-child(4) { --dk-glow: 192,132,252; }
   #view-list > .grid > .tk-card:nth-child(4)::after {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 86 38'%3E%3Cpath d='M2 22 L16 20 L30 24 L44 18 L58 21 L72 15 L84 17 L84 38 L2 38Z' fill='%23b78bff' fill-opacity='.13'/%3E%3Cpath d='M2 22 L16 20 L30 24 L44 18 L58 21 L72 15 L84 17' fill='none' stroke='%23b78bff' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  }
+  #view-list > .grid > .tk-card:nth-child(5) { --dk-glow: 110,231,160; }
+  #view-list > .grid > .tk-card:nth-child(5)::after {
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 86 38'%3E%3Cpath d='M2 33 L16 28 L30 30 L44 18 L60 14 L84 5 L84 38 L2 38Z' fill='%236ee7a0' fill-opacity='.13'/%3E%3Cpath d='M2 33 L16 28 L30 30 L44 18 L60 14 L84 5' fill='none' stroke='%236ee7a0' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
   }
   :root:not([data-theme="light"]) #view-list > .grid > .tk-alert {
@@ -214,6 +218,38 @@
   #view-list > .grid > .tk-alert .tk-label { color: rgba(255,214,220,.92) !important; }
   #view-list > .grid > .tk-alert .tk-sub { color: rgba(255,214,220,.6) !important; }
   #view-list > .grid > .tk-alert .tk-num { color: #fff; }
+
+
+  /* ---------- TEMA TERANG: kartu pastel seperti desain (Total=krem, Menunggu=kuning, Approval=biru, Dikirim=ungu, Diterima=hijau, Darurat=merah) ---------- */
+  html[data-theme="light"] #view-list > .grid > .tk-card {
+    border: 1px solid rgba(255,255,255,.9); border-radius: 18px;
+    background: linear-gradient(150deg, #fffaf2, #fdeedd);
+    box-shadow: 0 14px 32px -16px rgba(130,70,15,.38), inset 0 1px 0 #fff;
+  }
+  html[data-theme="light"] #view-list > .grid > .tk-card:nth-child(2) { background: linear-gradient(150deg, #fffdf3, #fff3d1); }
+  html[data-theme="light"] #view-list > .grid > .tk-card:nth-child(3) { background: linear-gradient(150deg, #f3f9ff, #dcebff); }
+  html[data-theme="light"] #view-list > .grid > .tk-card:nth-child(4) { background: linear-gradient(150deg, #f8f5ff, #e4dcff); }
+  html[data-theme="light"] #view-list > .grid > .tk-card:nth-child(5) { background: linear-gradient(150deg, #f4fcf6, #d9f3e0); }
+  html[data-theme="light"] #view-list > .grid > .tk-card:hover { transform: translateY(-2px); box-shadow: 0 18px 36px -16px rgba(130,70,15,.5), inset 0 1px 0 #fff; }
+  html[data-theme="light"] #view-list > .grid > .tk-card .tk-ico { background: rgba(255,255,255,.75) !important; box-shadow: 0 4px 10px -4px rgba(130,70,15,.35); border-color: rgba(255,255,255,.95) !important; }
+  html[data-theme="light"] #view-list > .grid > .tk-card:nth-child(1) .tk-ico { color: #c0701a !important; }
+  html[data-theme="light"] #view-list > .grid > .tk-card:nth-child(2) .tk-ico { color: #b8860b !important; }
+  html[data-theme="light"] #view-list > .grid > .tk-card:nth-child(3) .tk-ico { color: #2563c9 !important; }
+  html[data-theme="light"] #view-list > .grid > .tk-card:nth-child(4) .tk-ico { color: #7c3aed !important; }
+  html[data-theme="light"] #view-list > .grid > .tk-card:nth-child(5) .tk-ico { color: #15803d !important; }
+  html[data-theme="light"] #view-list > .grid > .tk-card .tk-num { color: #3a1d0a !important; }
+  html[data-theme="light"] #view-list > .grid > .tk-card:nth-child(3) .tk-num { color: #1e3a8a !important; }
+  html[data-theme="light"] #view-list > .grid > .tk-card:nth-child(4) .tk-num { color: #4c1d95 !important; }
+  html[data-theme="light"] #view-list > .grid > .tk-card:nth-child(5) .tk-num { color: #166534 !important; }
+  /* kartu darurat: merah tua, teks putih */
+  html[data-theme="light"] #view-list > .grid > .tk-alert {
+    background: linear-gradient(150deg, #e11d48, #9f1239); border-color: rgba(255,255,255,.25);
+    box-shadow: 0 16px 32px -14px rgba(159,18,57,.6);
+  }
+  html[data-theme="light"] #view-list > .grid > .tk-alert .tk-label,
+  html[data-theme="light"] #view-list > .grid > .tk-alert .tk-num { color: #fff !important; }
+  html[data-theme="light"] #view-list > .grid > .tk-alert .tk-sub { color: rgba(255,255,255,.85) !important; }
+  html[data-theme="light"] #view-list > .grid > .tk-alert .tk-ico { background: rgba(255,255,255,.22) !important; color: #fff !important; border-color: rgba(255,255,255,.4) !important; }
 
   /* kartu KPI di modul Aset (Dashboard Aset, dll.) ikut berpendar */
   :root:not([data-theme="light"]) section[id^="view-a"] > .grid > .glass-panel:has(> span.font-black) {

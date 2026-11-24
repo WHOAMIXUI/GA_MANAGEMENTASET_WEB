@@ -101,8 +101,9 @@
         #view-list > .grid > .glass-panel { transition: transform .2s; --acc: #f4a23a; }
         #view-list > .grid > .glass-panel:nth-child(2) { --acc: #ffd65a; }
         #view-list > .grid > .glass-panel:nth-child(3) { --acc: #6fb7ff; }
-        #view-list > .grid > .glass-panel:nth-child(4) { --acc: #7bcbb0; }
-        #view-list > .grid > .glass-panel:nth-child(5) { --acc: #f2708f; }
+        #view-list > .grid > .glass-panel:nth-child(4) { --acc: #b78bff; }
+        #view-list > .grid > .glass-panel:nth-child(5) { --acc: #7bcbb0; }
+        #view-list > .grid > .glass-panel:nth-child(6) { --acc: #f2708f; }
         #view-list > .grid > .glass-panel::after { content: ""; position: absolute; right: -20px; bottom: -22px; width: 86px; height: 86px; border-radius: 50%; background: radial-gradient(circle, #1d0f09 0 24%, var(--acc) 25% 100%); opacity: .2; pointer-events: none; }
         #view-list > .grid > .glass-panel:hover { transform: translateY(-3px); }
 
