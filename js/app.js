@@ -16,7 +16,8 @@
         const LEGACY_STATUS = { Pending: 'Menunggu', Approved: 'Approval Manager Ops', Completed: 'Diterima', Rejected: 'Ditolak' };
         function normStatus(s) { return TSTAT[s] ? s : (LEGACY_STATUS[s] || 'Menunggu'); }
         function normReqs(list) { list.forEach(r => { r.status = normStatus(r.status); }); return list; }
-        function statusMatch(st, f) { return !f || (f === 'PROSES' ? PROSES.includes(st) : st === f); }
+        const APPROVAL = ['Approval Manager Ops', 'Approval Finance'];
+        function statusMatch(st, f) { return !f || (f === 'PROSES' ? PROSES.includes(st) : f === 'APPROVAL' ? APPROVAL.includes(st) : st === f); }
         function canReceive(req) {
             const u = getCurrentUser(); if (!u || !req || req.status !== 'Dikirim') return false;
             const b = u.branches || [];
@@ -834,7 +835,8 @@
             const list = getAccessibleRequests();
             document.getElementById('metric-total').innerText = list.length;
             document.getElementById('metric-pending').innerText = list.filter(r => r.status === 'Menunggu').length;
-            document.getElementById('metric-progress').innerText = list.filter(r => PROSES.includes(r.status)).length;
+            document.getElementById('metric-approval').innerText = list.filter(r => APPROVAL.includes(r.status)).length;
+            document.getElementById('metric-shipped').innerText = list.filter(r => r.status === 'Dikirim').length;
             document.getElementById('metric-completed').innerText = list.filter(r => r.status === 'Diterima').length;
             document.getElementById('metric-emergency').innerText = list.filter(r => r.urgency === 'Critical' || r.urgency === 'High').length;
             
