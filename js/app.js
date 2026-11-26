@@ -531,8 +531,8 @@
                         <button type="button" onclick="removeFormItemRow('${rowId}')" class="modern-button bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 font-bold text-[11px] px-2.5 py-1 border border-rose-500/20">Hapus Baris</button>
                     </div>
                     <div class="grid grid-cols-1 lg:grid-cols-12 gap-3">
-                        <div class="${isGAUser() ? 'lg:col-span-4' : 'lg:col-span-6'}"><input type="text" required placeholder="Nama / Tipe Aset..." class="item-name w-full glass-input px-3.5 py-2 text-xs font-semibold"></div>
-                        <div class="${isGAUser() ? 'lg:col-span-3' : 'lg:col-span-4'}"><select class="item-category w-full glass-input px-3.5 py-2 text-xs font-semibold">${catOpts}</select></div>
+                        <div class="${isGAUser() ? 'lg:col-span-4' : 'lg-span-7'}"><input type="text" required placeholder="Nama / Tipe Aset..." class="item-name w-full glass-input px-3.5 py-2 text-xs font-semibold"></div>
+                        <div class="lg:col-span-3"><select class="item-category w-full glass-input px-3.5 py-2 text-xs font-semibold">${catOpts}</select></div>
                         <div class="lg:col-span-1"><input type="number" min="1" required class="item-qty w-full glass-input px-2 py-2 text-xs font-semibold text-center" value="1" oninput="calculateLiveTotal()"></div>
                         <div class="lg:col-span-1"><input type="text" required class="item-unit w-full glass-input px-2 py-2 text-xs font-semibold text-center" value="Unit"></div>
                         ${isGAUser() ? `<div class="lg:col-span-3"><input type="number" min="0" required class="item-cost w-full glass-input px-3.5 py-2 text-xs font-semibold font-mono" value="0" oninput="calculateLiveTotal()"></div>` : '<input type="hidden" class="item-cost" value="0">'}
