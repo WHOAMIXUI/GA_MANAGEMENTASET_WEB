@@ -228,3 +228,5 @@ tr.tk-is-new { box-shadow: inset 3px 0 0 #f4a23a; background: linear-gradient(90
 .tk-review { background: linear-gradient(180deg, #a78bfa, #8b5cf6) !important; color: #fff !important; }
 .tk-staff-banner { padding: .65rem .9rem; border-radius: .75rem; font-size: .78rem; font-weight: 600; background: rgba(244,162,58,.14); border: 1px solid rgba(244,162,58,.4); color: #9a5208; }
 .staff-edit-mode .se-stat { display: none; }
+
+.staff-edit-mode .se-cost { display: none; }
