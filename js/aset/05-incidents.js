@@ -11,7 +11,7 @@ AM.report=async function(pre){const E=mine().filter(a=>!dead(a)&&freeQty(a)>=1);
   {k:'qty',l:'Jumlah unit',t:'number',v:1},
   {k:'who',l:'Karyawan terkait / penanggung jawab'},
   {k:'date',l:'Tanggal kejadian',t:'date',v:today()},
-  {k:'comp',l:'Ganti rugi dibebankan ke karyawan (Rp, opsional)',t:'number',v:0},
+  ...(isGA()?[{k:'comp',l:'Ganti rugi dibebankan ke karyawan (Rp, opsional)',t:'number',v:0}]:[]),
   {k:'note',l:'Kronologi / catatan'}],'Simpan Laporan',{
   html:'<p class="text-left text-[11px] mt-3" style="color:#e1b782">Contoh: piring 16 unit → laporkan 6 unit “Rusak”, lalu laporkan lagi 7 unit “Hilang”. Sisa 3 unit tetap Baik. Pilih “Maintenance” bila aset hanya perlu servis/perawatan (bukan rusak atau hilang): status berubah ke Maintenance, tanpa nilai kerugian.</p>',
   check:o=>{const a=find(o.a);if(!a)return 'Aset tidak ditemukan';const n=parseInt(o.qty),mx=freeQty(a);
@@ -19,7 +19,7 @@ AM.report=async function(pre){const E=mine().filter(a=>!dead(a)&&freeQty(a)>=1);
    if(o.kind==='mtc'&&a.status==='Maintenance')return 'Aset ini sudah berstatus Maintenance';
    if(o.kind!=='lost'&&o.kind!=='mtc'&&a.status==='Broken')return 'Aset ini sudah berstatus Rusak';
    if(o.kind==='dmg_emp'&&!o.who)return 'Nama karyawan wajib diisi untuk kerusakan karena kelalaian';
-   if(o.comp!==''&&!(Number(o.comp)>=0))return 'Nominal ganti rugi tidak valid';
+   if(o.comp!==undefined&&o.comp!==''&&!(Number(o.comp)>=0))return 'Nominal ganti rugi tidak valid';
    if(o.kind==='mtc'&&Number(o.comp)>0)return 'Ganti rugi tidak berlaku untuk Maintenance (aset tidak rusak/hilang)';return ''}});
  if(!r)return;const a=find(r.a),n=parseInt(r.qty),k=r.kind,st=k==='lost'?'Lost':k==='mtc'?'Maintenance':'Broken',lab=KIND[k][1],who=r.who?' · '+r.who:'';
  let tgt;const mtcInfo=x=>{if(k==='mtc'){x.mtcDate=r.date||today();x.mtcNote=(r.who?r.who+' — ':'')+(r.note||'')}};
@@ -33,7 +33,7 @@ AM.report=async function(pre){const E=mine().filter(a=>!dead(a)&&freeQty(a)>=1);
  Swal.fire({title:'Laporan tersimpan',text:`${n} unit “${a.name}” dicatat: ${lab}. Sisa unit Baik di baris asal: ${q(a)===n&&tgt===a?0:q(a)}.`,icon:'success',...WN})};
 function incView(){const all=canAll(),mb=myBranches(),f=AM.incF||'all',ga=isGA();
  const L=AM.incidents.filter(i=>i.kind!=='mtc'&&(all||mb.includes(i.branch))).sort((a,b)=>(b.ts||0)-(a.ts||0)),V=L.filter(i=>f==='all'||i.kind===f),
-  sq2=k=>L.filter(i=>i.kind===k).reduce((n,i)=>n+i.qty,0),loss=L.reduce((n,i)=>n+i.loss,0),comp=L.reduce((n,i)=>n+i.comp,0);
+  sq2=k=>L.filter(i=>i.kind===k).reduce((n,i)=>n+i.qty,0),loss=L.reduce((n,i)=>n+(i.loss||0),0),comp=L.reduce((n,i)=>n+(i.comp||0),0);
  const tabs=[['all','Semua ('+L.length+')'],...Object.keys(KIND).filter(k=>k!=='mtc').map(k=>[k,KIND[k][1]+' ('+L.filter(i=>i.kind===k).length+')'])].map(([k,l])=>`<button onclick="AM.incTab('${k}')" class="modern-button text-xs font-bold px-4 py-2 border ${f===k?'bg-dobah-400 text-cocoa-950 border-dobah-400':'bg-cocoa-800 text-dobah-200 border-white/10'}">${l}</button>`).join('');
  const rows=V.map(i=>`<tr class="hover:bg-white/[0.02]"><td class="p-4 whitespace-nowrap">${esc(i.date)}${sub(esc(i.id))}</td><td class="p-4 font-bold text-white">${esc(i.name)}${sub(esc(i.branch)||'-')}</td><td class="p-4">${kbadge(i.kind)}${i.found?sub('<span class="text-emerald-400">Ditemukan '+esc(i.found)+'</span>'):''}</td><td class="p-4 font-mono font-bold text-white text-base">${i.qty}</td><td class="p-4">${esc(i.who)||'<span class="text-dobah-200/40">—</span>'}</td>${ga?`<td class="p-4 font-mono">${rp(i.loss)}${i.comp?sub('Ganti rugi '+rp(i.comp)):''}</td>`:''}<td class="p-4 text-xs">${esc(i.note)||'—'}${sub('Pelapor: '+esc(i.by))}</td><td class="p-4">${ga?btn(`AM.incDel('${i.id}')`,'fa-trash','Hapus catatan (aset tidak berubah)','text-rose-400'):''}</td></tr>`).join('');
  $('view-ainc').innerHTML=`<div class="grid grid-cols-2 lg:grid-cols-5 gap-4">${kpi('Rusak (karyawan)',sq2('dmg_emp')+' unit','fa-user-xmark','amber')}${kpi('Rusak (wajar)',sq2('dmg_use')+' unit','fa-wrench','rose')}${kpi('Hilang',sq2('lost')+' unit','fa-magnifying-glass','violet')}${ga?kpi('Total Kerugian',rp(loss),'fa-money-bill-trend-up','rose')+kpi('Ganti Rugi Dibebankan',rp(comp),'fa-hand-holding-dollar','emerald'):''}</div>
