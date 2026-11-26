@@ -251,11 +251,6 @@
                             </select>
                         </div>
                     </div>
-
-                    <div>
-                        <label class="block text-xs font-bold uppercase text-dobah-200/70 mb-1.5">Alasan / Justifikasi Pengajuan <span class="text-rose-500">*</span></label>
-                        <textarea id="formJustification" rows="2.5" required placeholder="Jelaskan kebutuhan pengadaan atau alasan perbaikan aset ini secara ringkas..." class="w-full glass-input p-3.5 text-xs sm:text-sm font-medium"></textarea>
-                    </div>
                 </div>
 
                 <!-- Rincian Aset -->
@@ -696,7 +691,7 @@
                     <div><span class="text-[9px] text-dobah-200/50 block font-bold uppercase">Status:</span><span id="detailStatusBadge" class="font-bold truncate block text-dobah-400"></span></div>
                 </div>
                 <div id="detailFlow"></div>
-                <div class="space-y-1">
+                <div id="detailJustBox" class="space-y-1">
                     <span class="text-[11px] font-black uppercase text-dobah-200/70">Justifikasi:</span>
                     <p id="detailJustification" class="text-[11px] bg-cocoa-900 p-2.5 rounded border border-white/10 italic text-dobah-200"></p>
                 </div>
@@ -725,8 +720,9 @@
             </div>
             <form id="editApprovalForm" onsubmit="saveEditApproval(event)" class="p-6 space-y-5">
                 <input type="hidden" id="editReqDocId">
+                <div id="editStaffBanner" class="hidden tk-staff-banner"><i class="fa-solid fa-circle-info mr-2"></i>Perubahan Anda <b>belum langsung berlaku</b>. Setelah dikirim, GA Manager akan meninjau dan menyetujui atau menolaknya.</div>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
+                    <div id="editStatusWrap">
                         <label class="block text-xs font-bold uppercase text-dobah-200/70 mb-1.5">Status Tiket Keseluruhan</label>
                         <select id="editStatus" class="w-full glass-input px-3 py-2 text-sm font-semibold">
                             <option value="Menunggu" class="bg-cocoa-900">1. Menunggu</option>
@@ -757,14 +753,14 @@
                     <div id="editModalItemsContainer" class="space-y-4 max-h-[50vh] overflow-y-auto p-1"></div>
                 </div>
 
-                <div>
+                <div id="editNotesWrap">
                     <label class="block text-xs font-bold uppercase text-dobah-200/70 mb-1.5">Catatan GA</label>
                     <textarea id="editGANotes" rows="2" class="w-full glass-input p-3 text-sm font-medium" placeholder="Catatan approval..."></textarea>
                 </div>
 
                 <div class="flex justify-end space-x-2 pt-3 border-t border-white/10">
                     <button type="button" onclick="closeModal('editApprovalModal')" class="modern-button bg-cocoa-800 hover:bg-cocoa-900 text-dobah-200 text-xs font-bold px-4 py-2 border border-white/10">Batal</button>
-                    <button type="submit" class="modern-button bg-dobah-400 hover:bg-dobah-500 text-slate-950 font-bold text-xs px-5 py-2">Simpan Perubahan</button>
+                    <button type="submit" id="editSubmitBtn" class="modern-button bg-dobah-400 hover:bg-dobah-500 text-slate-950 font-bold text-xs px-5 py-2">Simpan Perubahan</button>
                 </div>
             </form>
         </div>
