@@ -266,7 +266,7 @@
 
                     <div id="formItemsContainer" class="space-y-4"></div>
 
-                    <div class="bg-cocoa-900/90 border border-white/10 p-4 rounded-xl flex flex-col sm:flex-row justify-between items-center gap-3">
+                    <div id="formTotalBox" class="bg-cocoa-900/90 border border-white/10 p-4 rounded-xl flex flex-col sm:flex-row justify-between items-center gap-3">
                         <div class="flex items-center space-x-2.5">
                             <i class="fa-solid fa-calculator text-dobah-400 text-lg"></i>
                             <span class="font-black text-xs uppercase tracking-wider text-dobah-200">TOTAL ESTIMASI ANGGARAN PENGADAAN:</span>
@@ -696,9 +696,9 @@
                     <p id="detailJustification" class="text-[11px] bg-cocoa-900 p-2.5 rounded border border-white/10 italic text-dobah-200"></p>
                 </div>
                 <table class="w-full text-left border-collapse border border-white/10 text-[11px]">
-                    <thead><tr class="bg-cocoa-900 text-dobah-200 font-mono uppercase text-[10px]"><th class="p-2 border border-white/10 text-center w-8">No</th><th class="p-2 border border-white/10">Item</th><th class="p-2 border border-white/10 text-center">Qty</th><th class="p-2 border border-white/10 text-right">Harga</th><th class="p-2 border border-white/10 text-right">Subtotal</th></tr></thead>
+                    <thead><tr class="bg-cocoa-900 text-dobah-200 font-mono uppercase text-[10px]"><th class="p-2 border border-white/10 text-center w-8">No</th><th class="p-2 border border-white/10">Item</th><th class="p-2 border border-white/10 text-center">Qty</th><th class="p-2 border border-white/10 text-right money-only">Harga</th><th class="p-2 border border-white/10 text-right money-only">Subtotal</th></tr></thead>
                     <tbody id="detailItemsTableBody" class="divide-y divide-white/5 border border-white/10 text-dobah-100"></tbody>
-                    <tfoot><tr class="bg-cocoa-900/60 font-bold border-t border-white/10 text-xs"><td colspan="4" class="p-2 text-right uppercase font-black text-dobah-200">Total:</td><td id="detailTotalBudget" class="p-2 text-right font-mono font-black text-dobah-400">Rp 0</td></tr></tfoot>
+                    <tfoot id="detailTotalFoot"><tr class="bg-cocoa-900/60 font-bold border-t border-white/10 text-xs"><td colspan="4" class="p-2 text-right uppercase font-black text-dobah-200">Total:</td><td id="detailTotalBudget" class="p-2 text-right font-mono font-black text-dobah-400">Rp 0</td></tr></tfoot>
                 </table>
                 <div id="detailPhotosContainer" class="flex flex-wrap gap-2 pt-1 mb-3"></div>
                 <div id="detailActions" class="pt-1"></div>
