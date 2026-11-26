@@ -236,3 +236,23 @@ tr.tk-is-new { box-shadow: inset 3px 0 0 #f4a23a; background: linear-gradient(90
 
 /* semua pil Status Tiket di tabel berukuran sama */
 #requestsTableBody .tk-pill { width: 8.25rem; justify-content: center; text-align: center; box-sizing: border-box; white-space: nowrap; }
+
+/* ===== Bar atas: semua tombol & ikon berukuran seragam (38px) ===== */
+header.drip { --hd-ctl: 38px; }
+header.drip .theme-toggle,
+header.drip button[onclick="toggleNotifMenu()"] {
+  width: var(--hd-ctl) !important; height: var(--hd-ctl) !important; padding: 0 !important;
+  align-items: center; justify-content: center; box-sizing: border-box; flex-shrink: 0; line-height: 1;
+  border-radius: 10px !important;
+}
+header.drip button[onclick="toggleNotifMenu()"] { display: inline-flex; }
+header.drip .theme-toggle-label { display: none !important; }
+header.drip .theme-toggle i,
+header.drip button[onclick="toggleNotifMenu()"] > i {
+  font-size: 15px !important; width: 15px; height: 15px; line-height: 15px !important; text-align: center; display: block;
+}
+header.drip .dk-avatar { width: var(--hd-ctl) !important; height: var(--hd-ctl) !important; font-size: 14px; box-sizing: border-box; }
+header.drip > div:last-child > button[onclick="handleLogout()"] {
+  height: var(--hd-ctl); padding: 0 .95rem !important; border-radius: 10px !important; box-sizing: border-box; white-space: nowrap;
+}
+header.drip #cloudStatusBadge { height: var(--hd-ctl); padding-top: 0 !important; padding-bottom: 0 !important; box-sizing: border-box; }
