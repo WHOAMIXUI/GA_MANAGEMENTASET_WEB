@@ -538,7 +538,7 @@
                         <div class="lg:col-span-3"><input type="number" min="0" required class="item-cost w-full glass-input px-3.5 py-2 text-xs font-semibold font-mono" value="0" oninput="calculateLiveTotal()"></div>
                     </div>
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-                        <input type="text" placeholder="Catatan spesifikasi..." class="item-notes w-full glass-input px-3 py-2 text-xs">
+                        <input type="text" required placeholder="Alasan Permintaan / Perbaikan..." class="item-notes w-full glass-input px-3 py-2 text-xs">
                         <div class="flex items-center flex-wrap gap-2">
                             <label class="modern-button bg-dobah-400 text-slate-950 text-[11px] font-bold px-3.5 py-2 cursor-pointer flex items-center shrink-0">
                                 <i class="fa-solid fa-camera mr-1.5"></i>Ambil Foto
@@ -630,7 +630,7 @@
                 id: `ARQ-${new Date().getFullYear()}-${String(appState.requests.length+1).padStart(3,'0')}`, 
                 division: document.getElementById('formDivision').value, branch: document.getElementById('formBranch').value, 
                 submissionDate: document.getElementById('formSubmissionDate').value, urgency: document.getElementById('formUrgency').value, 
-                status: 'Menunggu', justification: document.getElementById('formJustification').value, gaNotes: '', items, audit: auditTrail
+                status: 'Menunggu', justification: '', gaNotes: '', items, audit: auditTrail
             };
 
             if (window.db) { try { await window.fbDeps.addDoc(window.fbDeps.collection(window.db, "requests"), p); } catch(err){ console.error("[Firestore] gagal tambah request:", err.code, err.message); } } 
@@ -746,15 +746,15 @@
 
                 let btns = isGA
                     ? `<button type="button" onclick="printRequest(${actIdx})" class="tk-print" title="Cetak form pengajuan" aria-label="Cetak form pengajuan"><i class="fa-solid fa-print text-[13px]"></i></button>
-                       <button type="button" onclick="openEditModal(${actIdx})" class="tk-act">Detail / Ubah</button>
+                       ${req.pendingEdit ? `<button type="button" onclick="reviewPendingEdit(${actIdx})" class="tk-act tk-review" title="Ada perubahan dari staf yang menunggu keputusan">Tinjau Ubahan</button>` : ''}<button type="button" onclick="openEditModal(${actIdx})" class="tk-act">Detail / Ubah</button>
                        <button type="button" onclick="deleteRequest(${actIdx}, '${req.docId}')" class="tk-del" title="Hapus tiket" aria-label="Hapus tiket"><i class="fa-regular fa-trash-can text-[13px]"></i></button>`
                     : `<button type="button" onclick="printRequest(${actIdx})" class="tk-print" title="Cetak form pengajuan" aria-label="Cetak form pengajuan"><i class="fa-solid fa-print text-[13px]"></i></button>
-                       <button type="button" onclick="openDetailModal(${actIdx})" class="tk-act">Detail</button>${canReceive(req) ? `<button type="button" onclick="confirmReceived(${actIdx})" class="tk-recv" title="Konfirmasi barang sudah diterima"><i class="fa-solid fa-circle-check"></i> Terima</button>` : ''}`;
+                       <button type="button" onclick="openDetailModal(${actIdx})" class="tk-act">Detail</button>${canStaffEdit(req) ? `<button type="button" onclick="openStaffEditModal(${actIdx})" class="tk-act" title="Ajukan perubahan (perlu persetujuan GA)">Ubah</button>` : ''}${canReceive(req) ? `<button type="button" onclick="confirmReceived(${actIdx})" class="tk-recv" title="Konfirmasi barang sudah diterima"><i class="fa-solid fa-circle-check"></i> Terima</button>` : ''}`;
 
                 tbody.innerHTML += `
                     <tr class="transition-colors${(window.NR && NR.isNew(req)) ? ' tk-is-new' : ''}">
                         <td class="p-4 pl-6 whitespace-nowrap">
-                            <a href="javascript:void(0)" onclick="openDetailModal(${actIdx})" class="tk-id" title="Lihat detail tiket">${esc(req.id)}</a>${(window.NR && NR.isNew(req)) ? '<span class="tk-new" title="Pengajuan baru, belum dibuka">BARU</span>' : ''}<br>
+                            <a href="javascript:void(0)" onclick="openDetailModal(${actIdx})" class="tk-id" title="Lihat detail tiket">${esc(req.id)}</a>${(window.NR && NR.isNew(req)) ? '<span class="tk-new" title="Pengajuan baru, belum dibuka">BARU</span>' : ''}${req.pendingEdit ? '<span class="tk-pend" title="Perubahan dari staf menunggu persetujuan GA">Ubahan menunggu</span>' : ''}<br>
                             <span class="text-[11px] text-dobah-200/60 font-normal"><i class="fa-regular fa-calendar mr-1"></i>${esc(req.submissionDate)}</span>
                         </td>
                         <td class="p-4">
@@ -910,7 +910,8 @@
             document.getElementById('detailSubmissionDate').innerText = req.submissionDate;
             document.getElementById('detailStatusBadge').innerText = `${(TSTAT[req.status] || {}).label || req.status} (${req.urgency})`;
             renderTicketFlow(req);
-            document.getElementById('detailJustification').innerText = req.justification || '-';
+            document.getElementById('detailJustification').innerText = req.justification || '';
+            const jb = document.getElementById('detailJustBox'); if (jb) jb.style.display = req.justification ? '' : 'none';
 
             const tb = document.getElementById('detailItemsTableBody'); tb.innerHTML = ''; let tot = 0;
             if(req.items) {
@@ -948,9 +949,10 @@
                     : `<ol class="fl">${TICKET_FLOW.map((k, i) => `<li class="fl-step ${i < cur ? 'is-done' : i === cur ? 'is-now' : ''}"><span class="fl-dot">${i < cur ? '<i class="fa-solid fa-check"></i>' : i + 1}</span><span class="fl-lbl">${esc(TSTAT[k].short)}</span></li>`).join('')}</ol>`;
             }
             const act = document.getElementById('detailActions');
-            if (act) act.innerHTML = canReceive(req)
+            const pendNote = req.pendingEdit ? `<div class="tk-staff-banner" style="margin-bottom:.5rem"><i class="fa-solid fa-hourglass-half mr-2"></i>Perubahan dari ${esc(req.pendingEdit.by)} menunggu persetujuan GA.</div>` : '';
+            if (act) act.innerHTML = pendNote + (canReceive(req)
                 ? `<button type="button" onclick="confirmReceived(currentDetailIdx)" class="modern-button bg-dobah-400 text-cocoa-950 text-xs font-bold px-4 py-2"><i class="fa-solid fa-circle-check mr-1.5"></i>Konfirmasi barang sudah diterima</button>`
-                : '';
+                : '');
         }
 
         async function confirmReceived(idx) {
@@ -983,6 +985,7 @@
             const u = getCurrentUser(); if (u.role !== 'General Affair Manager') return Swal.fire('Akses Dibatasi', 'Hanya GA Manager.', 'warning');
             const r = appState.requests[idx]; if (!r) return;
             if (window.NR) NR.mark(r);
+            setEditMode('ga');
             document.getElementById('editReqDocId').value = idx;
             document.getElementById('editStatus').value = r.status; 
             document.getElementById('editUrgency').value = r.urgency; 
@@ -1022,7 +1025,7 @@
                     </div>
                     
                     <div>
-                        <input type="text" placeholder="Catatan spesifikasi / keterangan item..." class="edit-item-notes w-full glass-input px-3 py-1.5 text-xs" value="${data ? esc(data.notes || '') : ''}">
+                        <input type="text" placeholder="Alasan Permintaan / Perbaikan..." class="edit-item-notes w-full glass-input px-3 py-1.5 text-xs" value="${data ? esc(data.notes || '') : ''}">
                     </div>
 
                     <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-1">
@@ -1037,7 +1040,7 @@
                             <label class="lb-cost block text-[10px] uppercase font-bold text-dobah-200/60 mb-1">Harga Satuan (Rp)</label>
                             <input type="number" min="0" required class="edit-item-cost w-full glass-input px-2.5 py-1 text-xs font-bold font-mono" value="${data ? data.cost : 0}">
                         </div>
-                        <div>
+                        <div class="se-stat">
                             <label class="lb-stat block text-[10px] uppercase font-bold text-dobah-400 mb-1">Status Item:</label>
                             <select class="edit-item-status w-full glass-input px-2.5 py-1 text-xs font-bold text-dobah-300">${statusItemOpts}</select>
                         </div>
@@ -1101,8 +1104,123 @@
             }
         }
 
+
+        /* --- STAF MENGUBAH PENGAJUAN -> HARUS DISETUJUI GA DULU --- */
+        const STAFF_EDITABLE = ['Menunggu', 'Approval Manager Ops', 'Approval Finance'];
+        let editMode = 'ga';
+        function canStaffEdit(req) {
+            const u = getCurrentUser(); if (!u || !req) return false;
+            if (u.role === 'General Affair Manager') return false;
+            const b = u.branches || [];
+            if (!(b.includes('ALL') || b.includes(req.branch))) return false;
+            return STAFF_EDITABLE.includes(req.status) && !req.pendingEdit;
+        }
+        function setEditMode(mode) {
+            editMode = mode;
+            const staff = mode === 'staff';
+            ['editStatusWrap', 'editNotesWrap'].forEach(id => { const el = document.getElementById(id); if (el) el.style.display = staff ? 'none' : ''; });
+            const bn = document.getElementById('editStaffBanner'); if (bn) bn.classList.toggle('hidden', !staff);
+            const bt = document.getElementById('editSubmitBtn'); if (bt) bt.textContent = staff ? 'Kirim Perubahan ke GA' : 'Simpan Perubahan';
+            const tt = document.getElementById('editModalTitle'); if (tt) tt.textContent = staff ? 'Ajukan Perubahan Pengajuan' : 'Edit & Approval Dokumen';
+            const m = document.getElementById('editApprovalModal'); if (m) m.classList.toggle('staff-edit-mode', staff);
+        }
+        function openStaffEditModal(idx) {
+            const r = appState.requests[idx]; if (!r) return;
+            if (!canStaffEdit(r)) return Swal.fire('Tidak bisa diubah', r.pendingEdit ? 'Masih ada perubahan sebelumnya yang menunggu persetujuan GA.' : 'Pengajuan yang sudah dikirim, diterima, atau ditolak tidak bisa diubah.', 'info');
+            setEditMode('staff');
+            document.getElementById('editReqDocId').value = idx;
+            document.getElementById('editStatus').value = r.status;
+            document.getElementById('editUrgency').value = r.urgency;
+            const c = document.getElementById('editModalItemsContainer'); c.innerHTML = '';
+            (r.items && r.items.length ? r.items : [null]).forEach((it, i) => addEditModalItemCard(it, i + 1));
+            openModal('editApprovalModal');
+        }
+        function collectEditItems() {
+            const out = [];
+            document.querySelectorAll('.edit-item-row').forEach(r => out.push({
+                name: r.querySelector('.edit-item-name').value.trim(), category: r.querySelector('.edit-item-category').value,
+                qty: parseInt(r.querySelector('.edit-item-qty').value) || 1, unit: r.querySelector('.edit-item-unit').value || 'Unit',
+                cost: parseFloat(r.querySelector('.edit-item-cost').value) || 0, notes: r.querySelector('.edit-item-notes').value || '',
+                photo: r.querySelector('.edit-item-photo').value || ''
+            }));
+            return out;
+        }
+        function describeEditChanges(req, pe) {
+            const L = [];
+            if (pe.urgency !== req.urgency) L.push(`Urgensi: <b>${esc(req.urgency)}</b> ➔ <b>${esc(pe.urgency)}</b>`);
+            const old = req.items || [], nw = pe.items || [];
+            nw.forEach((n, i) => {
+                const o = old[i];
+                if (!o) { L.push(`Tambah item: <b>${esc(n.name)}</b> (${esc(n.qty)} ${esc(n.unit)} @ ${formatRupiah(n.cost)})`); return; }
+                const d = [];
+                if (o.name !== n.name) d.push(`nama “${esc(o.name)}” ➔ “${esc(n.name)}”`);
+                if (o.category !== n.category) d.push(`kategori ${esc(o.category)} ➔ ${esc(n.category)}`);
+                if (o.qty !== n.qty || o.unit !== n.unit) d.push(`jumlah ${esc(o.qty)} ${esc(o.unit)} ➔ ${esc(n.qty)} ${esc(n.unit)}`);
+                if (o.cost !== n.cost) d.push(`harga ${formatRupiah(o.cost)} ➔ ${formatRupiah(n.cost)}`);
+                if ((o.notes || '') !== (n.notes || '')) d.push(`alasan “${esc(o.notes || '-')}” ➔ “${esc(n.notes || '-')}”`);
+                if ((o.photo || '') !== (n.photo || '')) d.push('foto diganti');
+                if (d.length) L.push(`<b>${esc(n.name || o.name)}</b>: ${d.join('; ')}`);
+            });
+            for (let i = nw.length; i < old.length; i++) L.push(`Hapus item: <b>${esc(old[i].name)}</b>`);
+            return L;
+        }
+        async function saveStaffEditRequest() {
+            const idx = parseInt(document.getElementById('editReqDocId').value);
+            const req = appState.requests[idx]; if (!req) return;
+            const usr = getCurrentUser();
+            if (!canStaffEdit(req)) { closeModal('editApprovalModal'); return Swal.fire('Tidak bisa diubah', 'Status pengajuan sudah berubah atau ada perubahan yang menunggu persetujuan.', 'info'); }
+            const pe = { by: usr.name, role: usr.role, at: new Date().toLocaleString('id-ID'), urgency: document.getElementById('editUrgency').value, items: collectEditItems() };
+            if (!describeEditChanges(req, pe).length) { closeModal('editApprovalModal'); return Swal.fire('Tidak ada perubahan', 'Isi pengajuan sama seperti sebelumnya.', 'info'); }
+            const prev = { pendingEdit: req.pendingEdit || null, audit: (req.audit || []).slice() };
+            req.pendingEdit = pe;
+            req.audit = (req.audit || []).concat([{ actor: usr.name, role: usr.role, action: 'Mengajukan perubahan pengajuan (menunggu persetujuan GA)', timestamp: pe.at }]);
+            if (window.db && req.docId) {
+                try { await window.fbDeps.setDoc(window.fbDeps.doc(window.db, 'requests', req.docId), { pendingEdit: req.pendingEdit, audit: req.audit }, { merge: true }); }
+                catch (err) {
+                    Object.assign(req, prev); applyTableFilters();
+                    return Swal.fire('Gagal', 'Perubahan tidak tersimpan (tidak ada izin atau koneksi bermasalah).', 'error');
+                }
+            } else { saveLocalState(); }
+            closeModal('editApprovalModal'); applyTableFilters(); updateMetrics();
+            Swal.fire('Terkirim', 'Perubahan dikirim ke GA Manager. Pengajuan baru berubah setelah disetujui.', 'success');
+        }
+        async function reviewPendingEdit(idx) {
+            const u = getCurrentUser(); if (!u || u.role !== 'General Affair Manager') return Swal.fire('Akses Dibatasi', 'Hanya GA Manager.', 'warning');
+            const req = appState.requests[idx]; if (!req || !req.pendingEdit) return;
+            const pe = req.pendingEdit;
+            const lines = describeEditChanges(req, pe);
+            const res = await Swal.fire({
+                title: `Perubahan ${esc(req.id)}`,
+                html: `<div style="text-align:left;font-size:13px"><p style="margin-bottom:8px">Diajukan oleh <b>${esc(pe.by)}</b> · ${esc(pe.at)}</p><ul style="padding-left:18px;list-style:disc">${lines.map(l => `<li style="margin-bottom:4px">${l}</li>`).join('') || '<li>Tidak ada beda isi.</li>'}</ul></div>`,
+                showCancelButton: true, showDenyButton: true, confirmButtonText: 'Setujui', denyButtonText: 'Tolak', cancelButtonText: 'Tutup', confirmButtonColor: '#16a34a', denyButtonColor: '#dc2626'
+            });
+            if (!res.isConfirmed && !res.isDenied) return;
+            let reason = '';
+            if (res.isDenied) {
+                const r2 = await Swal.fire({ title: 'Alasan penolakan', input: 'textarea', inputPlaceholder: 'Tulis alasan singkat untuk staf...', showCancelButton: true, confirmButtonText: 'Tolak perubahan', confirmButtonColor: '#dc2626', inputValidator: v => (!v || !v.trim()) ? 'Alasan wajib diisi' : null });
+                if (!r2.isConfirmed) return;
+                reason = r2.value.trim();
+            }
+            const prev = { items: req.items, urgency: req.urgency, pendingEdit: req.pendingEdit, audit: (req.audit || []).slice() };
+            const when = new Date().toLocaleString('id-ID');
+            if (res.isConfirmed) {
+                const old = req.items || [];
+                req.items = pe.items.map((n, i) => Object.assign({}, n, { itemStatus: (old[i] && old[i].itemStatus) || 'Menunggu' }));
+                req.urgency = pe.urgency;
+            }
+            req.pendingEdit = null;
+            req.audit = (req.audit || []).concat([{ actor: u.name, role: u.role, action: res.isConfirmed ? `Menyetujui perubahan dari ${pe.by}` : `Menolak perubahan dari ${pe.by}. Alasan: ${reason}`, timestamp: when }]);
+            if (window.db && req.docId) {
+                try { await window.fbDeps.setDoc(window.fbDeps.doc(window.db, 'requests', req.docId), { items: req.items, urgency: req.urgency, pendingEdit: null, audit: req.audit }, { merge: true }); }
+                catch (err) { Object.assign(req, prev); applyTableFilters(); return Swal.fire('Gagal', 'Keputusan tidak tersimpan. Coba lagi.', 'error'); }
+            } else { saveLocalState(); }
+            applyTableFilters(); updateMetrics();
+            Swal.fire(res.isConfirmed ? 'Disetujui' : 'Ditolak', res.isConfirmed ? 'Perubahan sudah diterapkan ke pengajuan.' : 'Perubahan ditolak, pengajuan tetap seperti semula.', res.isConfirmed ? 'success' : 'info');
+        }
+
         async function saveEditApproval(e) {
             e.preventDefault();
+            if (editMode === 'staff') return saveStaffEditRequest();
             const idx = parseInt(document.getElementById('editReqDocId').value); 
             const req = appState.requests[idx]; if (!req) return;
             const usr = getCurrentUser();
