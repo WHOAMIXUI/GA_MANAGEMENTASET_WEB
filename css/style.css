@@ -222,3 +222,9 @@ tr.tk-is-new { box-shadow: inset 3px 0 0 #f4a23a; background: linear-gradient(90
 .lb-qty, .lb-cost, .lb-stat { font-weight: 800; letter-spacing: .03em; }
 .lb-qty::before, .lb-cost::before, .lb-stat::before { content: ""; display: inline-block; width: .5rem; height: .5rem; border-radius: 50%; background: currentColor; margin-right: .4rem; vertical-align: .05em; }
 .lb-qty { color: #8ab8ff; } .lb-cost { color: #6ee7a0; } .lb-stat { color: #f4a23a; }
+
+/* --- perubahan dari staf menunggu persetujuan GA --- */
+.tk-pend { display: inline-flex; align-items: center; margin-left: .5rem; padding: .12rem .55rem; border-radius: 999px; font-size: .62rem; font-weight: 800; letter-spacing: .02em; background: rgba(167,139,250,.2); color: #7c3aed; border: 1px solid rgba(124,58,237,.35); white-space: nowrap; }
+.tk-review { background: linear-gradient(180deg, #a78bfa, #8b5cf6) !important; color: #fff !important; }
+.tk-staff-banner { padding: .65rem .9rem; border-radius: .75rem; font-size: .78rem; font-weight: 600; background: rgba(244,162,58,.14); border: 1px solid rgba(244,162,58,.4); color: #9a5208; }
+.staff-edit-mode .se-stat { display: none; }
