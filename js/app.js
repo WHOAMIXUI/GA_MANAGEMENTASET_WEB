@@ -771,7 +771,7 @@
                             </div>
                             <div class="tk-bar" role="progressbar" aria-valuenow="${progressPercent}" aria-valuemin="0" aria-valuemax="100"><div style="width:${progressPercent}%"></div></div>
                         </td>
-                        <td class="p-4 text-center"><span class="tk-pill ${st.cls}"><i class="${st.icon} text-[10px]"></i>${st.label}</span></td>
+                        <td class="p-4 text-center"><span class="tk-pill ${st.cls}"><i class="${st.icon} text-[10px]"></i>${st.short || st.label}</span></td>
                         <td class="p-4 pr-6 text-right whitespace-nowrap">${btns}</td>
                     </tr>`;
             });
