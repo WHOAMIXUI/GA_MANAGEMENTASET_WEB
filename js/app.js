@@ -531,11 +531,11 @@
                         <button type="button" onclick="removeFormItemRow('${rowId}')" class="modern-button bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 font-bold text-[11px] px-2.5 py-1 border border-rose-500/20">Hapus Baris</button>
                     </div>
                     <div class="grid grid-cols-1 lg:grid-cols-12 gap-3">
-                        <div class="lg:col-span-4"><input type="text" required placeholder="Nama / Tipe Aset..." class="item-name w-full glass-input px-3.5 py-2 text-xs font-semibold"></div>
-                        <div class="lg:col-span-3"><select class="item-category w-full glass-input px-3.5 py-2 text-xs font-semibold">${catOpts}</select></div>
+                        <div class="${isGAUser() ? 'lg:col-span-4' : 'lg:col-span-6'}"><input type="text" required placeholder="Nama / Tipe Aset..." class="item-name w-full glass-input px-3.5 py-2 text-xs font-semibold"></div>
+                        <div class="${isGAUser() ? 'lg:col-span-3' : 'lg:col-span-4'}"><select class="item-category w-full glass-input px-3.5 py-2 text-xs font-semibold">${catOpts}</select></div>
                         <div class="lg:col-span-1"><input type="number" min="1" required class="item-qty w-full glass-input px-2 py-2 text-xs font-semibold text-center" value="1" oninput="calculateLiveTotal()"></div>
                         <div class="lg:col-span-1"><input type="text" required class="item-unit w-full glass-input px-2 py-2 text-xs font-semibold text-center" value="Unit"></div>
-                        <div class="lg:col-span-3"><input type="number" min="0" required class="item-cost w-full glass-input px-3.5 py-2 text-xs font-semibold font-mono" value="0" oninput="calculateLiveTotal()"></div>
+                        ${isGAUser() ? `<div class="lg:col-span-3"><input type="number" min="0" required class="item-cost w-full glass-input px-3.5 py-2 text-xs font-semibold font-mono" value="0" oninput="calculateLiveTotal()"></div>` : '<input type="hidden" class="item-cost" value="0">'}
                     </div>
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
                         <input type="text" required placeholder="Alasan Permintaan / Perbaikan..." class="item-notes w-full glass-input px-3 py-2 text-xs">
@@ -608,6 +608,7 @@
             let t = 0;
             document.querySelectorAll('.item-row').forEach(r => t += (parseFloat(r.querySelector('.item-qty').value)||0) * (parseFloat(r.querySelector('.item-cost').value)||0));
             document.getElementById('formLiveTotalBudget').innerText = formatRupiah(t);
+            const tb = document.getElementById('formTotalBox'); if (tb) tb.style.display = isGAUser() ? '' : 'none';
         }
 
         async function handleFormSubmit(e) {
@@ -917,10 +918,12 @@
             if(req.items) {
                 req.items.forEach((item, i) => {
                     const sub = item.qty * item.cost; tot += sub;
-                    tb.innerHTML += `<tr><td class="p-2 border border-white/10 text-center">${i+1}</td><td class="p-2 border border-white/10 font-bold text-white">${esc(item.name)}<br><span class="text-[9px] text-dobah-200/50">${esc(item.category)} ${item.notes?'• '+esc(item.notes):''}</span></td><td class="p-2 border border-white/10 text-center text-dobah-200">${esc(item.qty)} ${esc(item.unit)}</td><td class="p-2 border border-white/10 text-right text-dobah-200">${formatRupiah(item.cost)}</td><td class="p-2 border border-white/10 text-right font-bold text-white">${formatRupiah(sub)}</td></tr>`;
+                    tb.innerHTML += `<tr><td class="p-2 border border-white/10 text-center">${i+1}</td><td class="p-2 border border-white/10 font-bold text-white">${esc(item.name)}<br><span class="text-[9px] text-dobah-200/50">${esc(item.category)} ${item.notes?'• '+esc(item.notes):''}</span></td><td class="p-2 border border-white/10 text-center text-dobah-200">${esc(item.qty)} ${esc(item.unit)}</td>${isGAUser() ? `<td class="p-2 border border-white/10 text-right text-dobah-200">${formatRupiah(item.cost)}</td><td class="p-2 border border-white/10 text-right font-bold text-white">${formatRupiah(sub)}</td>` : ''}</tr>`;
                 });
             }
             document.getElementById('detailTotalBudget').innerText = formatRupiah(tot);
+            document.querySelectorAll('#detailModal .money-only').forEach(el => el.style.display = isGAUser() ? '' : 'none');
+            const dtf = document.getElementById('detailTotalFoot'); if (dtf) dtf.style.display = isGAUser() ? '' : 'none';
             
             const pc = document.getElementById('detailPhotosContainer'); pc.innerHTML = '';
             if(req.items) {
@@ -1036,7 +1039,7 @@
                                 <input type="text" required class="edit-item-unit w-20 glass-input px-2 py-1 text-xs text-center font-bold" value="${data ? data.unit || 'Unit' : 'Unit'}">
                             </div>
                         </div>
-                        <div>
+                        <div class="se-cost">
                             <label class="lb-cost block text-[10px] uppercase font-bold text-dobah-200/60 mb-1">Harga Satuan (Rp)</label>
                             <input type="number" min="0" required class="edit-item-cost w-full glass-input px-2.5 py-1 text-xs font-bold font-mono" value="${data ? data.cost : 0}">
                         </div>
@@ -1106,6 +1109,7 @@
 
 
         /* --- STAF MENGUBAH PENGAJUAN -> HARUS DISETUJUI GA DULU --- */
+        const isGAUser = () => { const u = getCurrentUser(); return !!u && u.role === 'General Affair Manager'; };
         const STAFF_EDITABLE = ['Menunggu', 'Approval Manager Ops', 'Approval Finance'];
         let editMode = 'ga';
         function canStaffEdit(req) {
