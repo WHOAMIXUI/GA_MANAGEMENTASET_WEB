@@ -48,7 +48,9 @@
   const level = () => AM.v3 ? 3 : AM.v2 ? 2 : 0;
   // Brankas harga hanya dipakai GA. Staf tidak memuat/menulisnya (aturan Firestore menolak) dan objek asetnya memang tanpa harga.
   const usePV = () => !!(AM.pv && AM.v3 && isGA());
-  const active = () => AM.v3 ? (usePV() ? ALL.concat(['values']) : ALL) : AM.v2 ? ['assets'] : [];
+  // Penawaran pasar & jual-beli memuat harga: hanya GA yang membaca/menulisnya (aturan Firestore melarang staf).
+  const GA_KINDS = ['market', 'trades'];
+  const active = () => AM.v3 ? (isGA() ? ALL : ALL.filter(k => !GA_KINDS.includes(k))).concat(usePV() ? ['values'] : []) : AM.v2 ? ['assets'] : [];
   // LP = harga terakhir yang diketahui cocok dengan server (dibaca dari asset_values atau baru kita tulis). Dipakai
   // untuk membedakan "harga yang sedang saya edit dan belum tersimpan" dari "harga lama yang basi".
   const LP = new Map();
@@ -332,9 +334,21 @@
     Swal.fire({ title: fail === 0 ? 'Bersih' : 'Belum tuntas', text: fail === 0 ? 'Tidak ada harga tersisa di data umum.' : 'Ada dokumen yang gagal dibersihkan (' + (fail < 0 ? 'kesalahan koneksi' : fail + ' dokumen') + '). Coba lagi.', icon: fail === 0 ? 'success' : 'warning', ...SW });
   };
 
+  /* ---------- Bersihkan nominal lama di Riwayat aset & sesi opname (GA, aman diulang) ---------- */
+  V2.cleanLegacy = async function () {
+    if (!isGA()) return deny();
+    const ok = await Swal.fire({ title: 'Bersihkan nominal lama?', icon: 'warning', showCancelButton: true, confirmButtonText: 'Bersihkan', cancelButtonText: 'Batal', ...SW,
+      text: 'Angka rupiah di Riwayat aset diganti "Rp ••••", dan harga di sesi stock opname dihapus. Nilai asli tetap ada di Audit Log (khusus GA) dan harga aset. Unduh backup dulu bila belum.' });
+    if (!ok.isConfirmed) return;
+    let n = 0;
+    AM.assets.forEach(a => (a.history || []).forEach(h => { const t = redactRp(h.act); if (t !== h.act) { h.act = t; n++; } }));
+    if (n) await save();
+    if (window.OPN && OPN.clean) await OPN.clean(); else Swal.fire({ title: 'Selesai', text: n + ' catatan riwayat dibersihkan.', icon: 'success', ...SW });
+  };
+
   V2.panel = () => `<div class="glass-panel p-5"><h3 class="text-sm font-bold text-white mb-1"><i class="fa-solid fa-gears text-dobah-400 mr-2"></i>Penyimpanan Data (Edit Bersamaan)</h3>
     ${AM.v3 ? `<p class="text-[11px] text-emerald-400 font-bold"><i class="fa-solid fa-circle-check mr-1"></i>Layout terbaru aktif: aset, peminjaman, insiden, jual-beli, vendor, dan kontak disimpan per catatan. Beberapa orang bisa mengedit bersamaan; perubahan pada kolom berbeda digabung otomatis.</p>`
       : `<p class="text-[11px] text-dobah-200/70 mb-3">${AM.v2 ? 'Aset sudah per dokumen. Upgrade untuk memecah peminjaman, insiden, jual-beli, vendor, dan kontak juga.' : 'Layout lama menyimpan semua data dalam satu dokumen, sehingga penyimpanan bersamaan bisa saling menimpa. Pindahkan ke layout baru (sekali saja, dengan backup otomatis).'}</p>
          <button onclick="V2.migrate()" class="modern-button bg-dobah-400 text-cocoa-950 text-xs font-bold px-4 py-2.5"><i class="fa-solid fa-arrows-rotate mr-1"></i>${AM.v2 ? 'Upgrade Layout' : 'Migrasi ke Layout Baru'}</button>`}
-    ${AM.v3 ? (AM.pv ? `<p class="text-[11px] text-emerald-400 font-bold mt-4"><i class="fa-solid fa-lock mr-1"></i>Brankas harga aktif: harga aset hanya bisa dibaca GA Manager.</p><button onclick="V2.cleanPrices()" class="modern-button bg-cocoa-800 text-dobah-300 text-[11px] font-bold px-3 py-2 mt-2 border border-white/5">Bersihkan sisa harga</button>` : `<div class="mt-4 pt-4 border-t border-white/5"><p class="text-[11px] text-dobah-200/70 mb-3">Harga aset saat ini hanya disembunyikan di tampilan. Pindahkan ke brankas khusus GA Manager agar staf tidak bisa membacanya dari database (sekali saja, dengan backup otomatis).</p><button onclick="V2.splitPrices()" class="modern-button bg-dobah-400 text-cocoa-950 text-xs font-bold px-4 py-2.5"><i class="fa-solid fa-lock mr-1"></i>Pisahkan Harga (Rahasiakan dari Staf)</button></div>`) : ''}</div>`;
+    ${AM.v3 ? (AM.pv ? `<p class="text-[11px] text-emerald-400 font-bold mt-4"><i class="fa-solid fa-lock mr-1"></i>Brankas harga aktif: harga aset hanya bisa dibaca GA Manager.</p><div class="flex flex-wrap gap-2 mt-2"><button onclick="V2.cleanPrices()" class="modern-button bg-cocoa-800 text-dobah-300 text-[11px] font-bold px-3 py-2 border border-white/5">Bersihkan sisa harga</button><button onclick="V2.cleanLegacy()" class="modern-button bg-cocoa-800 text-dobah-300 text-[11px] font-bold px-3 py-2 border border-white/5">Bersihkan nominal di Riwayat &amp; Opname lama</button></div>` : `<div class="mt-4 pt-4 border-t border-white/5"><p class="text-[11px] text-dobah-200/70 mb-3">Harga aset saat ini hanya disembunyikan di tampilan. Pindahkan ke brankas khusus GA Manager agar staf tidak bisa membacanya dari database (sekali saja, dengan backup otomatis).</p><button onclick="V2.splitPrices()" class="modern-button bg-dobah-400 text-cocoa-950 text-xs font-bold px-4 py-2.5"><i class="fa-solid fa-lock mr-1"></i>Pisahkan Harga (Rahasiakan dari Staf)</button></div>`) : ''}</div>`;
 })();

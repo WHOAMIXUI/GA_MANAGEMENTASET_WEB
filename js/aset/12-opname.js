@@ -141,7 +141,7 @@ window.GAX = (() => {
     if (!assets.length) return Swal.fire({ title: 'Tidak ada aset', text: 'Tidak ada aset aktif di cabang/kategori ini.', icon: 'info', ...SW });
     if (assets.length > 3000) return Swal.fire({ title: 'Terlalu banyak baris', text: `${assets.length} aset sekaligus terlalu besar untuk satu sesi. Pilih satu kategori saja.`, icon: 'warning', ...SW });
     const lines = {};
-    assets.forEach(a => { lines[a.id] = { n: a.name, c: a.category || '', e: q(a) - onLoan(a), p: a.price || 0, ol: onLoan(a), cnt: null, cond: a.status === 'Good' ? 'Good' : a.status, note: '', ts: 0, by: '' }; });
+    assets.forEach(a => { lines[a.id] = { n: a.name, c: a.category || '', e: q(a) - onLoan(a), ol: onLoan(a), cnt: null, cond: a.status === 'Good' ? 'Good' : a.status, note: '', ts: 0, by: '' }; });
     const s = { id: 'OPN-' + Date.now().toString(36).toUpperCase(), branch: r.branch, cat: r.cat, date: today(), by: who(), byId: (user() || {}).id || '', status: 'draft', createdAt: Date.now(), lines, extra: {} };
     lset(LSS(s.id), s);
     putIdx(summarize(s));
@@ -188,11 +188,15 @@ window.GAX = (() => {
     if (keep) { el.className = rowHTML(id, OPN.cur.lines[id]).match(/class="([^"]*)"/)[1]; return; } // jangan ganggu input yang sedang diketik
     el.outerHTML = rowHTML(id, OPN.cur.lines[id]);
   }
+  // Harga tidak lagi disimpan di sesi opname (dibaca semua pengguna). Nilai dihitung dari harga aset saat ini, hanya terlihat oleh GA.
+  const PR = (id, l) => { const a = AM.assets.find(x => x.id === id); return (a && a.price != null) ? Number(a.price) || 0 : 0; };
+  OPN.PR = PR;
+  const noVal = st => { const o = Object.assign({}, st); delete o.shortVal; delete o.overVal; return o; };
   function stats(s) {
     const L = Object.entries(s.lines || {}), done = L.filter(([, l]) => l.cnt != null);
     return { total: L.length, done: done.length, ok: done.filter(([, l]) => l.cnt === l.e).length, short: done.filter(([, l]) => l.cnt < l.e).length, over: done.filter(([, l]) => l.cnt > l.e).length,
       shortQty: done.reduce((n, [, l]) => n + Math.max(0, l.e - l.cnt), 0), overQty: done.reduce((n, [, l]) => n + Math.max(0, l.cnt - l.e), 0),
-      shortVal: done.reduce((n, [, l]) => n + Math.max(0, l.e - l.cnt) * (l.p || 0), 0), overVal: done.reduce((n, [, l]) => n + Math.max(0, l.cnt - l.e) * (l.p || 0), 0),
+      shortVal: done.reduce((n, [id, l]) => n + Math.max(0, l.e - l.cnt) * PR(id, l), 0), overVal: done.reduce((n, [id, l]) => n + Math.max(0, l.cnt - l.e) * PR(id, l), 0),
       extraQty: Object.values(s.extra || {}).reduce((n, x) => n + (x.qty || 0), 0) };
   }
   OPN.stats = stats;
@@ -227,7 +231,7 @@ window.GAX = (() => {
     const st = stats(s), todo = st.total - st.done;
     const ok = await confirmBox('Selesaikan opname?', `${st.done} dari ${st.total} item sudah dihitung.${todo ? ` ${todo} item belum dihitung akan dicatat “tidak dicek” dan TIDAK dianggap selisih.` : ''} Setelah selesai, hasil tidak bisa diubah.`);
     if (!ok) return;
-    s.status = 'final'; s.finalizedAt = Date.now(); s.finalizedBy = who(); s.sum = stats(s);
+    s.status = 'final'; s.finalizedAt = Date.now(); s.finalizedBy = who(); s.sum = noVal(stats(s));
     lset(LSS(s.id), s);
     if (window.db) { const { setDoc, doc } = window.fbDeps; setDoc(doc(window.db, 'settings', sdoc(s.id)), s, { merge: true }).catch(e => console.warn(e)); }
     putIdx(summarize(s)); unwatch();
@@ -291,11 +295,11 @@ window.GAX = (() => {
   }
   function resultView() {
     const s = OPN.cur; if (!s) return '<p class="text-dobah-200/60 p-6">Memuat...</p>';
-    const st = stats(s), diffs = Object.entries(s.lines).filter(([, l]) => l.cnt != null && l.cnt !== l.e).sort((a, b) => Math.abs((b[1].cnt - b[1].e) * (b[1].p || 0)) - Math.abs((a[1].cnt - a[1].e) * (a[1].p || 0)));
+    const st = stats(s), diffs = Object.entries(s.lines).filter(([, l]) => l.cnt != null && l.cnt !== l.e).sort((a, b) => Math.abs((b[1].cnt - b[1].e) * PR(b[0], b[1])) - Math.abs((a[1].cnt - a[1].e) * PR(a[0], a[1])));
     const bad = Object.entries(s.lines).filter(([, l]) => l.cnt != null && l.cond !== 'Good' && l.cnt === l.e);
     const ex = Object.values(s.extra || {}).filter(x => !x.removed);
     const rows = diffs.map(([id, l]) => { const d = l.cnt - l.e; return `<tr class="hover:bg-white/[0.02]"><td class="p-4 font-bold text-white">${esc(l.n)}${sub(esc(id) + (l.c ? ' · ' + esc(l.c) : ''))}${l.note ? sub(esc(l.note)) : ''}</td><td class="p-4 font-mono">${l.e}</td><td class="p-4 font-mono">${l.cnt}</td>
-      <td class="p-4 font-mono font-bold ${d < 0 ? 'text-rose-400' : 'text-amber-400'}">${d > 0 ? '+' : ''}${d}</td>${isGA() ? `<td class="p-4 font-mono">${rp(Math.abs(d) * (l.p || 0))}</td>` : ''}<td class="p-4">${esc(COND[l.cond] || l.cond)}</td>
+      <td class="p-4 font-mono font-bold ${d < 0 ? 'text-rose-400' : 'text-amber-400'}">${d > 0 ? '+' : ''}${d}</td>${isGA() ? `<td class="p-4 font-mono">${rp(Math.abs(d) * PR(id, l))}</td>` : ''}<td class="p-4">${esc(COND[l.cond] || l.cond)}</td>
       <td class="p-4 whitespace-nowrap">${isGA() && d < 0 ? btn(`AM.report('${esc(id).replace(/'/g, "\\'")}')`, 'fa-triangle-exclamation', 'Laporkan rusak / hilang', 'text-rose-400') : ''}</td></tr>`; }).join('');
     return `<div class="flex flex-wrap items-center justify-between gap-3"><div class="flex items-center gap-3"><button onclick="OPN.back()" class="modern-button bg-cocoa-800 text-dobah-200 text-xs font-bold px-3 py-2 border border-white/10"><i class="fa-solid fa-chevron-left"></i></button>
       <div><h3 class="text-white font-bold text-sm">Hasil Opname ${esc(s.branch)}${s.cat ? ' · ' + esc(s.cat) : ''}</h3><p class="text-[11px] text-dobah-200/60">${esc(s.id)} · ${esc(s.date)} · dihitung ${esc(s.by)} · diselesaikan ${esc(s.finalizedBy || '-')}</p></div></div>
@@ -324,6 +328,34 @@ window.GAX = (() => {
     if (NC.fresh.length) { nsave(); ui(); announce(NC.fresh); }
   };
   const _scan = NC.scan; NC.scan = function () { _scan.apply(this, arguments); try { OPN.notify(); } catch (e) { console.error(e); } };
+
+  /* ---------- bersihkan nominal lama (GA, aman diulang) ----------
+     Menghapus `p` (harga) dari semua sesi opname dan nilai kekurangan/kelebihan dari ringkasan. */
+  OPN.clean = async function () {
+    if (!isGA()) return deny();
+    if (!window.db || !navigator.onLine) return Swal.fire({ title: 'Perlu koneksi', icon: 'info', ...SW });
+    const { setDoc, doc, getDoc, deleteField } = window.fbDeps, db = window.db, ids = Object.keys(OPN.idx);
+    let n = 0, fail = 0;
+    Swal.fire({ title: 'Membersihkan opname...', allowOutsideClick: false, showConfirmButton: false, didOpen: () => Swal.showLoading(), ...SW });
+    for (const id of ids) {
+      try {
+        const snap = await getDoc(doc(db, 'settings', sdoc(id)));
+        if (snap.exists()) {
+          const s = snap.data(); let ch = false;
+          Object.values(s.lines || {}).forEach(l => { if (l && 'p' in l) { delete l.p; ch = true; } });
+          if (s.sum && ('shortVal' in s.sum || 'overVal' in s.sum)) { s.sum = noVal(s.sum); ch = true; }
+          if (ch) { await setDoc(doc(db, 'settings', sdoc(id)), s); n++; }
+        }
+        const ix = OPN.idx[id];
+        if (ix && ix.sum && ('shortVal' in ix.sum || 'overVal' in ix.sum)) {
+          await setDoc(doc(db, 'settings', DOC_IDX), { items: { [id]: { sum: { shortVal: deleteField(), overVal: deleteField() } } } }, { merge: true });
+          ix.sum = noVal(ix.sum); lset(LSI, OPN.idx);
+        }
+        try { localStorage.removeItem(LSS(id)); } catch (e) {}
+      } catch (e) { fail++; console.warn('Bersihkan opname', id, e); }
+    }
+    Swal.fire({ title: fail ? 'Belum tuntas' : 'Selesai', text: `${n} sesi dibersihkan${fail ? `, ${fail} gagal (coba lagi)` : ''}.`, icon: fail ? 'warning' : 'success', ...SW });
+  };
 
   GAX.regTab('aopn', { title: 'Stock Opname', render: () => { OPN.render(); loadIdx(true); } });
   window.addEventListener('profile-ready', () => loadIdx(false).then(() => OPN.notify()));

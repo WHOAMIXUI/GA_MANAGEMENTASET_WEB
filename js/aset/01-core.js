@@ -12,7 +12,8 @@ const user=()=>getCurrentUser(), isGA=()=>{const u=user();return !!u&&u.role==='
 const rp=n=>formatRupiah(n||0), today=()=>{const t=new Date(),p=n=>String(n).padStart(2,'0');return `${t.getFullYear()}-${p(t.getMonth()+1)}-${p(t.getDate())}`};
 const mine=()=>{const u=user();if(!u)return[];return(isGA()||(u.branches||[]).includes('ALL'))?AM.assets:AM.assets.filter(a=>(u.branches||[]).includes(a.branch))};
 const badge=s=>{const[c,l]=ST[s]||ST.Good;return `<span class="px-2.5 py-1 text-[10px] uppercase font-bold rounded border bg-${c}-500/10 text-${c}-400 border-${c}-500/20">${l}</span>`};
-const hist=(a,act)=>a.history.push({t:new Date().toLocaleString('id-ID'),act,by:(user()||{}).name||'System'});
+const redactRp=t=>String(t==null?'':t).replace(/-?Rp[\s\u00a0]*[\d.,]+/g,'Rp ••••'); // nominal tidak boleh masuk Riwayat (dibaca semua pengguna)
+const hist=(a,act)=>a.history.push({t:new Date().toLocaleString('id-ID'),act:redactRp(act),by:(user()||{}).name||'System'});
 const kpi=(l,v,ic,c='dobah')=>`<div class="glass-panel p-5"><div class="flex justify-between items-start mb-3"><span class="text-[11px] font-extrabold uppercase tracking-wide text-dobah-200/70">${l}</span><div class="w-8 h-8 rounded-lg bg-${c}-400/20 text-${c}-400 flex items-center justify-center border border-${c}-400/30"><i class="fa-solid ${ic}"></i></div></div><span class="font-mono font-black text-2xl text-white">${v}</span></div>`;
 const btn=(fn,ic,t,cls='text-dobah-300')=>`<button onclick="${fn}" title="${t}" class="modern-button bg-cocoa-800 hover:bg-cocoa-900 ${cls} text-[11px] px-2.5 py-1.5 border border-white/5 ml-1"><i class="fa-solid ${ic}"></i></button>`;
 

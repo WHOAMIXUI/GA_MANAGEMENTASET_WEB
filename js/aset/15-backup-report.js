@@ -182,7 +182,7 @@
       const ln = AM.loans.filter(l => inMonth(l.date, ym) || inMonth(l.returnedAt, ym)).filter(l => { const a = find(l.assetId); return !br || (a && a.branch === br); });
       heading(d, `6. Peminjaman aset (${ln.length} aktivitas, ${overdue().length} lewat batas saat ini)`); table(d, ['Aset', 'Peminjam', 'Qty', 'Pinjam', 'Kembali'], ln.slice(0, 60).map(l => [(find(l.assetId) || {}).name || l.assetId, l.name, l.qty, l.date, l.returnedAt || 'belum']));
       const op = window.OPN ? Object.values(OPN.idx).filter(s => !s.deleted && s.status === 'final' && inMonth(s.date, ym) && (!br || s.branch === br)) : [];
-      heading(d, `7. Stock opname bulan ini (${op.length})`); table(d, ['Cabang', 'Tanggal', 'Oleh', 'Item dihitung', 'Unit kurang', 'Unit lebih', 'Nilai kekurangan'], op.map(s => { const m = s.sum || {}; return [s.branch, s.date, s.by, `${m.done || 0}/${m.total || 0}`, m.shortQty || 0, m.overQty || 0, R(m.shortVal || 0)]; }));
+      heading(d, `7. Stock opname bulan ini (${op.length})`); table(d, ['Cabang', 'Tanggal', 'Oleh', 'Item dihitung', 'Unit kurang', 'Unit lebih', 'Nilai kekurangan'], op.map(s => { const m = s.sum || {}; return [s.branch, s.date, s.by, `${m.done || 0}/${m.total || 0}`, m.shortQty || 0, m.overQty || 0, '-']; }));
       finish(d, `laporan_bulanan_${ym}${br ? '_' + br.replace(/\W+/g, '_') : ''}.pdf`); Swal.close();
     } catch (e) { console.error(e); pdfErr(e); }
   };
@@ -193,7 +193,7 @@
       const st = OPN.stats(s), d = await newDoc(`Berita Acara Stock Opname - ${s.branch}`, `${s.id} · ${s.date} · dihitung ${s.by}${s.cat ? ' · kategori ' + s.cat : ''}`, false);
       heading(d, 'Ringkasan'); table(d, ['Keterangan', 'Nilai'], [['Item dihitung', `${st.done} dari ${st.total}`], ['Sesuai', st.ok], ['Kurang (unit / item)', `${st.shortQty} / ${st.short}`], ['Lebih (unit / item)', `${st.overQty} / ${st.over}`], ['Nilai kekurangan', R(st.shortVal)], ['Nilai kelebihan', R(st.overVal)], ['Barang tidak terdaftar (unit)', st.extraQty]]);
       const diffs = Object.entries(s.lines).filter(([, l]) => l.cnt != null && l.cnt !== l.e);
-      heading(d, 'Rincian selisih'); table(d, ['ID', 'Nama', 'Sistem', 'Fisik', 'Selisih', 'Nilai', 'Catatan'], diffs.map(([id, l]) => [id, l.n, l.e, l.cnt, (l.cnt - l.e > 0 ? '+' : '') + (l.cnt - l.e), R(Math.abs(l.cnt - l.e) * (l.p || 0)), l.note || '']));
+      heading(d, 'Rincian selisih'); table(d, ['ID', 'Nama', 'Sistem', 'Fisik', 'Selisih', 'Nilai', 'Catatan'], diffs.map(([id, l]) => [id, l.n, l.e, l.cnt, (l.cnt - l.e > 0 ? '+' : '') + (l.cnt - l.e), R(Math.abs(l.cnt - l.e) * OPN.PR(id, l)), l.note || '']));
       const ex = Object.values(s.extra || {}).filter(x => !x.removed); if (ex.length) { heading(d, 'Barang ditemukan, belum terdaftar'); table(d, ['Nama', 'Jumlah', 'Catatan'], ex.map(x => [x.name, x.qty, x.note || ''])); }
       if (d.y > d.internal.pageSize.getHeight() - 140) { d.addPage(); d.y = 60; }
       d.setFontSize(9); d.setTextColor(60, 60, 60); d.text('Petugas hitung', 70, d.y + 20); d.text('Kepala cabang / saksi', 250, d.y + 20); d.text('GA Manager', 440, d.y + 20); d.line(60, d.y + 80, 160, d.y + 80); d.line(240, d.y + 80, 360, d.y + 80); d.line(430, d.y + 80, 530, d.y + 80);
