@@ -233,3 +233,6 @@ tr.tk-is-new { box-shadow: inset 3px 0 0 #f4a23a; background: linear-gradient(90
 
 /* kolom Nama Aset lebih lebar untuk akun staf (kelas lg:col-span-7 tidak ada di tailwind.css) */
 @media (min-width: 1024px) { .lg-span-7 { grid-column: span 7 / span 7; } }
+
+/* semua pil Status Tiket di tabel berukuran sama */
+#requestsTableBody .tk-pill { width: 8.25rem; justify-content: center; text-align: center; box-sizing: border-box; white-space: nowrap; }
