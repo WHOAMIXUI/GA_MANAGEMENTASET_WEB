@@ -253,9 +253,9 @@ window.GAX = (() => {
   /* ---------- ekspor ---------- */
   OPN.csv = function (id) {
     const s = (OPN.cur && OPN.cur.id === id) ? OPN.cur : lget(LSS(id)); if (!s) return;
-    const rows = [['ID Aset', 'Nama', 'Kategori', 'Qty Sistem', 'Qty Fisik', 'Selisih', 'Nilai Selisih (Rp)', 'Kondisi', 'Catatan', 'Dihitung oleh']];
-    Object.entries(s.lines).forEach(([aid, l]) => { const d = diffOf(l); rows.push([aid, l.n, l.c, l.e, l.cnt == null ? 'Belum dihitung' : l.cnt, d == null ? '' : d, d == null ? '' : d * (l.p || 0), COND[l.cond] || l.cond, l.note, l.by]); });
-    Object.values(s.extra || {}).filter(x => !x.removed).forEach(x => rows.push(['(tidak terdaftar)', x.name, '', 0, x.qty, '+' + x.qty, '', '', x.note, x.by]));
+    const rows = [['ID Aset', 'Nama', 'Kategori', 'Qty Sistem', 'Qty Fisik', 'Selisih', ...(isGA() ? ['Nilai Selisih (Rp)'] : []), 'Kondisi', 'Catatan', 'Dihitung oleh']];
+    Object.entries(s.lines).forEach(([aid, l]) => { const d = diffOf(l); rows.push([aid, l.n, l.c, l.e, l.cnt == null ? 'Belum dihitung' : l.cnt, d == null ? '' : d, ...(isGA() ? [d == null ? '' : d * (l.p || 0)] : []), COND[l.cond] || l.cond, l.note, l.by]); });
+    Object.values(s.extra || {}).filter(x => !x.removed).forEach(x => rows.push(['(tidak terdaftar)', x.name, '', 0, x.qty, '+' + x.qty, ...(isGA() ? [''] : []), '', x.note, x.by]));
     GAX.csv(`opname_${s.branch.replace(/\W+/g, '_')}_${s.date}.csv`, rows);
   };
   OPN.pdf = function (id) { const s = (OPN.cur && OPN.cur.id === id) ? OPN.cur : lget(LSS(id)); if (s && window.BKP) BKP.opnamePdf(s); };
@@ -295,13 +295,13 @@ window.GAX = (() => {
     const bad = Object.entries(s.lines).filter(([, l]) => l.cnt != null && l.cond !== 'Good' && l.cnt === l.e);
     const ex = Object.values(s.extra || {}).filter(x => !x.removed);
     const rows = diffs.map(([id, l]) => { const d = l.cnt - l.e; return `<tr class="hover:bg-white/[0.02]"><td class="p-4 font-bold text-white">${esc(l.n)}${sub(esc(id) + (l.c ? ' · ' + esc(l.c) : ''))}${l.note ? sub(esc(l.note)) : ''}</td><td class="p-4 font-mono">${l.e}</td><td class="p-4 font-mono">${l.cnt}</td>
-      <td class="p-4 font-mono font-bold ${d < 0 ? 'text-rose-400' : 'text-amber-400'}">${d > 0 ? '+' : ''}${d}</td><td class="p-4 font-mono">${rp(Math.abs(d) * (l.p || 0))}</td><td class="p-4">${esc(COND[l.cond] || l.cond)}</td>
+      <td class="p-4 font-mono font-bold ${d < 0 ? 'text-rose-400' : 'text-amber-400'}">${d > 0 ? '+' : ''}${d}</td>${isGA() ? `<td class="p-4 font-mono">${rp(Math.abs(d) * (l.p || 0))}</td>` : ''}<td class="p-4">${esc(COND[l.cond] || l.cond)}</td>
       <td class="p-4 whitespace-nowrap">${isGA() && d < 0 ? btn(`AM.report('${esc(id).replace(/'/g, "\\'")}')`, 'fa-triangle-exclamation', 'Laporkan rusak / hilang', 'text-rose-400') : ''}</td></tr>`; }).join('');
     return `<div class="flex flex-wrap items-center justify-between gap-3"><div class="flex items-center gap-3"><button onclick="OPN.back()" class="modern-button bg-cocoa-800 text-dobah-200 text-xs font-bold px-3 py-2 border border-white/10"><i class="fa-solid fa-chevron-left"></i></button>
       <div><h3 class="text-white font-bold text-sm">Hasil Opname ${esc(s.branch)}${s.cat ? ' · ' + esc(s.cat) : ''}</h3><p class="text-[11px] text-dobah-200/60">${esc(s.id)} · ${esc(s.date)} · dihitung ${esc(s.by)} · diselesaikan ${esc(s.finalizedBy || '-')}</p></div></div>
       <div class="flex gap-2"><button onclick="OPN.csv('${s.id}')" class="modern-button bg-cocoa-800 text-dobah-200 text-xs font-bold px-4 py-2 border border-white/10"><i class="fa-solid fa-file-csv mr-1"></i>CSV</button><button onclick="OPN.pdf('${s.id}')" class="modern-button bg-cocoa-800 text-dobah-200 text-xs font-bold px-4 py-2 border border-white/10"><i class="fa-solid fa-print mr-1"></i>PDF</button></div></div>
-      <div class="grid grid-cols-2 lg:grid-cols-5 gap-4">${kpi('Item Dihitung', st.done + '/' + st.total, 'fa-list-check')}${kpi('Sesuai', st.ok, 'fa-circle-check', 'emerald')}${kpi('Kurang (unit)', st.shortQty, 'fa-circle-xmark', 'rose')}${kpi('Lebih (unit)', st.overQty, 'fa-triangle-exclamation', 'amber')}${kpi('Nilai Kekurangan', rp(st.shortVal), 'fa-wallet', 'rose')}</div>`
-      + tbl(th('Aset', 'Sistem', 'Fisik', 'Selisih', 'Nilai', 'Kondisi', 'Aksi'), rows, 'Tidak ada selisih. Semua item yang dihitung sesuai data sistem.')
+      <div class="grid grid-cols-2 lg:grid-cols-5 gap-4">${kpi('Item Dihitung', st.done + '/' + st.total, 'fa-list-check')}${kpi('Sesuai', st.ok, 'fa-circle-check', 'emerald')}${kpi('Kurang (unit)', st.shortQty, 'fa-circle-xmark', 'rose')}${kpi('Lebih (unit)', st.overQty, 'fa-triangle-exclamation', 'amber')}${isGA() ? kpi('Nilai Kekurangan', rp(st.shortVal), 'fa-wallet', 'rose') : ''}</div>`
+      + tbl(th('Aset', 'Sistem', 'Fisik', 'Selisih', ...(isGA() ? ['Nilai'] : []), 'Kondisi', 'Aksi'), rows, 'Tidak ada selisih. Semua item yang dihitung sesuai data sistem.')
       + (bad.length ? `<div class="glass-panel p-4 text-xs"><b class="text-white">Jumlah sesuai, tetapi kondisi tidak baik (${bad.length}):</b><br>${bad.map(([id, l]) => esc(l.n) + ' (' + esc(COND[l.cond] || l.cond) + ')').join(', ')}</div>` : '')
       + (ex.length ? `<div class="glass-panel p-4 text-xs"><b class="text-white">Barang ditemukan tetapi belum terdaftar (${ex.length}):</b><br>${ex.map(x => esc(x.name) + ' × ' + x.qty + (x.note ? ' — ' + esc(x.note) : '')).join('<br>')}</div>` : '')
       + (st.total - st.done ? `<p class="text-[11px] text-dobah-200/60">${st.total - st.done} item tidak dicek dan tidak dihitung sebagai selisih.</p>` : '');

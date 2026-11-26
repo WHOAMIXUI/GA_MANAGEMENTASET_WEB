@@ -44,8 +44,8 @@ AM.incDel=async function(id){if(!isGA())return deny();if(!(await confirmBox('Hap
 
 function divBlock(){const L=mine().filter(a=>!dead(a)),g={};L.forEach(a=>{const k=a.division||'(Belum dialokasikan)';const x=g[k]=g[k]||{u:0,v:0,b:0};x.u+=q(a);x.v+=tot(a);x.b+=dep(a).book});
  AM._dk=Object.keys(g).sort((a,b)=>g[b].u-g[a].u);
- const rows=AM._dk.map((k,i)=>`<tr class="hover:bg-white/[0.02]"><td class="p-4 font-bold text-white">${esc(k)}</td><td class="p-4 font-mono">${g[k].u}</td><td class="p-4 font-mono">${rp(g[k].v)}</td><td class="p-4 font-mono text-emerald-300">${rp(g[k].b)}</td><td class="p-4">${btn(`AM.goDiv(${i})`,'fa-list','Lihat aset divisi ini')}</td></tr>`).join('');
- return `<h3 class="text-sm font-bold text-white mt-2"><i class="fa-solid fa-sitemap text-dobah-400 mr-2"></i>Alokasi per Divisi</h3>`+tbl(th('Divisi','Unit','Nilai Perolehan','Nilai Buku','Aksi'),rows,'Belum ada aset.')}
+ const rows=AM._dk.map((k,i)=>`<tr class="hover:bg-white/[0.02]"><td class="p-4 font-bold text-white">${esc(k)}</td><td class="p-4 font-mono">${g[k].u}</td>${isGA()?`<td class="p-4 font-mono">${rp(g[k].v)}</td><td class="p-4 font-mono text-emerald-300">${rp(g[k].b)}</td>`:''}<td class="p-4">${btn(`AM.goDiv(${i})`,'fa-list','Lihat aset divisi ini')}</td></tr>`).join('');
+ return `<h3 class="text-sm font-bold text-white mt-2"><i class="fa-solid fa-sitemap text-dobah-400 mr-2"></i>Alokasi per Divisi</h3>`+tbl(th('Divisi','Unit',...(isGA()?['Nilai Perolehan','Nilai Buku']:[]),'Aksi'),rows,'Belum ada aset.')}
 function mapAll(){map();$('view-amap').insertAdjacentHTML('beforeend',divBlock())}
 AM.goDiv=function(i){const k=AM._dk[i];AM.f.div=k==='(Belum dialokasikan)'?'__NONE':k;AM.f.page=1;switchTab('areg')};
 const R={adash:dash,areg:reg,amap:mapAll,amtc:mtc,ainc:incView,adep:depr,aasg:loanView,amkt:mkt,aven:ven,acon:()=>con()}; // con() ada di 07-contacts.js (dimuat setelah file ini), jadi dipanggil lewat pembungkus
