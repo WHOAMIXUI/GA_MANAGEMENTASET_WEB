@@ -1,6 +1,6 @@
 /* Service worker GA Aset: bisa di-install, tahan koneksi buruk, dan menerima push.
    Naikkan VER setiap rilis supaya cache lama dibuang. */
-const VER = 'ga-aset-v27';
+const VER = 'ga-aset-v28';
 const SHELL_CACHE = VER + '-shell';
 const CDN_CACHE = VER + '-cdn';
 const SHELL = [
