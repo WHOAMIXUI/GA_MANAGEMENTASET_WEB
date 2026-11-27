@@ -345,7 +345,7 @@
   #ticketTablePanel .w-56 { width: 10.5rem; }
   #requestsTableBody .tk-pill { font-size: .68rem; padding: .3rem .65rem; }
 
-  .dk-pri { display: inline-flex; align-items: center; gap: .35rem; padding: .25rem .7rem; border-radius: 8px; font-size: .7rem; font-weight: 700; border: 1px solid transparent; white-space: nowrap; }
+  .dk-pri { display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box; width: 5.5rem; gap: .35rem; padding: .25rem .5rem; border-radius: 8px; font-size: .7rem; font-weight: 700; border: 1px solid transparent; white-space: nowrap; }
   .dk-pri::before { content: ""; width: .42rem; height: .42rem; border-radius: 50%; background: currentColor; }
   .dk-pri-critical { background: rgba(244,63,94,.16); color: #fda4af; border-color: rgba(251,113,133,.4); }
   .dk-pri-high { background: rgba(244,162,58,.16); color: #ffc46b; border-color: rgba(244,162,58,.4); }
