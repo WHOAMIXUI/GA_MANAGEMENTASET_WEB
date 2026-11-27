@@ -214,6 +214,8 @@
     if (!(await confirmBox('Hapus pekerjaan?', `"${t.name}" beserta riwayatnya tidak akan tampil lagi.`))) return;
     put(Object.assign({}, t, { deleted: true })); renderActive();
   };
+  // Pekerjaan belum selesai yang tenggatnya hari ini / terlewat (opsional dibatasi kategori). Dipakai kartu "Perlu tindakan hari ini".
+  TK.due = function (cats) { load(); return live().filter(t => !t.done && t.due && (!cats || cats.includes(t.cat)) && days(t.due) <= 0); };
   TK.csv = function () {
     const rows = [['Nama', 'Kategori', 'Cabang', 'Aset / Lokasi', 'PIC', 'Prioritas', 'Perkiraan Biaya', 'Pengulangan', 'Tenggat', 'Status', 'Terakhir Selesai']];
     live().sort((a, b) => rank(a) - rank(b) || String(a.due).localeCompare(String(b.due))).forEach(t => {

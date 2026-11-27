@@ -50,11 +50,63 @@ window.GAX = (() => {
   const who = () => (user() || {}).name || 'System';
 
   /* ---------- cloud (tidak pernah ditunggu oleh UI) ---------- */
-  function cloudSet(docId, data) {
-    if (!window.db) return Promise.resolve(false);
-    const { setDoc, doc } = window.fbDeps;
-    return setDoc(doc(window.db, 'settings', docId), data, { merge: true }).then(() => true).catch(e => { console.warn('Opname cloud:', e.code || e); return false; });
+  /* Antrean kirim + indikator "belum tersinkron".
+     Setiap perubahan dicatat di localStorage (OUT) SEBELUM dikirim, dan catatannya baru dihapus setelah server MENGONFIRMASI
+     tulisannya (promise setDoc selesai). Saat offline / sinyal jelek Firestore menahan promise itu, jadi "catatan masih ada" =
+     "belum tersinkron". Catatan tahan reload: saat aplikasi dibuka lagi, yang belum terkonfirmasi dikirim ulang (aman diulang:
+     semua tulisan berupa merge dengan isi yang sama).
+     Kunci catatan per sesi: 'l:<idAset>' baris hitungan, 'x:<id>' barang tak terdaftar, 's' dokumen sesi (buat / selesai), 'i' ringkasan indeks.
+     Status: 'p' = menunggu, 'r' = ditolak server (mis. sesi sudah diselesaikan / tak punya akses): tidak dicoba ulang otomatis. */
+  const LSO = 'ga_opn_out';
+  let OUT = lget(LSO) || {}, SEQ = Date.now();
+  const inflight = new Map(); // 'sesi|kunci' -> token tulisan yang sedang menunggu konfirmasi di sesi halaman ini
+  const TRANSIENT = ['unavailable', 'deadline-exceeded', 'cancelled', 'aborted', 'internal'];
+  const outSave = () => { Object.keys(OUT).forEach(k => { if (!Object.keys(OUT[k]).length) delete OUT[k]; }); lset(LSO, OUT); };
+  const mark = (sid, key) => { const tok = ++SEQ; (OUT[sid] = OUT[sid] || {})[key] = { tok, st: 'p' }; outSave(); return tok; };
+  const dropMarks = (sid, test) => { const o = OUT[sid]; if (!o) return; Object.keys(o).forEach(k => { if (test(k)) delete o[k]; }); outSave(); paintSoon(); };
+  // hanya baris/barang yang dihitung untuk pengguna; 's' dan 'i' dianggap urusan internal
+  const outInfo = sid => { const v = Object.entries(OUT[sid] || {}); const user = v.filter(([k]) => k[0] === 'l' || k[0] === 'x'), meta = v.filter(([k]) => k[0] === 's' || k[0] === 'i');
+    return { pend: user.filter(([, m]) => m.st !== 'r').length, rej: v.filter(([, m]) => m.st === 'r').length, meta: meta.some(([, m]) => m.st !== 'r') }; };
+  const totalPend = () => Object.keys(OUT).reduce((n, sid) => { const i = outInfo(sid); return n + i.pend + (i.meta ? 1 : 0); }, 0);
+
+  // Kirim satu tulisan. Selalu didahului mark() supaya ada token; mengembalikan true bila dikonfirmasi server.
+  function send(docId, data, sid, key, merge) {
+    const m = OUT[sid] && OUT[sid][key], tok = m ? m.tok : 0, k = sid + '|' + key;
+    if (!window.db) return Promise.resolve(false); // mode lokal: catatan tetap ada, indikator menampilkannya
+    const { setDoc, doc } = window.fbDeps, ref = doc(window.db, 'settings', docId);
+    inflight.set(k, tok);
+    const end = () => { if (inflight.get(k) === tok) inflight.delete(k); };
+    return (merge === false ? setDoc(ref, data) : setDoc(ref, data, { merge: true }))
+      .then(() => { end(); const c = OUT[sid] && OUT[sid][key]; if (c && c.tok === tok) { delete OUT[sid][key]; outSave(); paintSoon(); } return true; })
+      .catch(e => {
+        end(); console.warn('Opname cloud:', e.code || e);
+        const c = OUT[sid] && OUT[sid][key];
+        if (c && c.tok === tok && e && e.code && !TRANSIENT.includes(e.code)) { c.st = 'r'; c.code = e.code; outSave(); }
+        paintSoon(); return false;
+      });
   }
+
+  // Kirim ulang catatan yang tidak punya tulisan berjalan (mis. setelah reload atau gagal sementara). Tidak menunggu apa pun.
+  function flush() {
+    if (!window.db) return;
+    Object.keys(OUT).forEach(sid => {
+      const keys = Object.keys(OUT[sid]).filter(k => OUT[sid][k].st !== 'r' && !inflight.has(sid + '|' + k)).sort((a, b) => (a === 's' ? -1 : b === 's' ? 1 : 0));
+      if (!keys.length) return;
+      const s = (OPN.cur && OPN.cur.id === sid) ? OPN.cur : lget(LSS(sid));
+      if (!s) { delete OUT[sid]; return; } // salinan lokal sesi sudah tidak ada: tidak ada yang bisa dikirim
+      keys.forEach(k => {
+        const id = k.slice(2);
+        if (k === 's') { mark(sid, k); send(sdoc(sid), s, sid, k); }
+        else if (k === 'i') { const sum = OPN.idx[sid] || summarize(s); mark(sid, k); send(DOC_IDX, { items: { [sid]: sum } }, sid, k); }
+        else if (k[0] === 'l' && s.lines && s.lines[id]) { mark(sid, k); send(sdoc(sid), { lines: { [id]: s.lines[id] } }, sid, k); }
+        else if (k[0] === 'x' && s.extra && s.extra[id]) { mark(sid, k); send(sdoc(sid), { extra: { [id]: s.extra[id] } }, sid, k); }
+        else delete OUT[sid][k]; // barisnya sudah tidak ada
+      });
+    });
+    outSave(); paintSoon();
+  }
+  OPN.flush = flush;
+
   async function cloudGet(docId) {
     if (!window.db) return null;
     try { const { getDoc, doc } = window.fbDeps; const s = await getDoc(doc(window.db, 'settings', docId)); return s.exists() ? s.data() : null; } catch (e) { return null; }
@@ -68,7 +120,7 @@ window.GAX = (() => {
     const L = Object.values(s.lines || {}), counted = L.filter(l => l.cnt != null).length;
     return { id: s.id, branch: s.branch, cat: s.cat || '', date: s.date, by: s.by, status: s.status, createdAt: s.createdAt, total: L.length, counted, finalizedAt: s.finalizedAt || 0, sum: s.sum || null, deleted: !!s.deleted };
   }
-  function putIdx(sum) { OPN.idx[sum.id] = sum; lset(LSI, OPN.idx); cloudSet(DOC_IDX, { items: { [sum.id]: sum } }); }
+  function putIdx(sum) { OPN.idx[sum.id] = sum; lset(LSI, OPN.idx); mark(sum.id, 'i'); send(DOC_IDX, { items: { [sum.id]: sum } }, sum.id, 'i'); }
   async function loadIdx(render) {
     if (!OPN.loaded) { OPN.idx = lget(LSI) || {}; OPN.loaded = true; }
     if (render) renderActive();
@@ -116,12 +168,13 @@ window.GAX = (() => {
   const persistLine = (id) => {
     const s = OPN.cur; if (!s) return;
     lset(LSS(s.id), s);
-    debounce('l' + id, () => cloudSet(sdoc(s.id), { lines: { [id]: s.lines[id] } }), 400);
+    mark(s.id, 'l:' + id); // langsung tercatat "belum tersinkron"; pengiriman menunggu 400 ms supaya ketukan beruntun jadi satu tulisan
+    debounce('l' + id, () => send(sdoc(s.id), { lines: { [id]: s.lines[id] } }, s.id, 'l:' + id), 400);
     debounce('i' + s.id, () => putIdx(summarize(s)), 1500);
   };
   const persistExtra = (id) => {
     const s = OPN.cur; lset(LSS(s.id), s);
-    cloudSet(sdoc(s.id), { extra: { [id]: s.extra[id] } });
+    mark(s.id, 'x:' + id); send(sdoc(s.id), { extra: { [id]: s.extra[id] } }, s.id, 'x:' + id);
     debounce('i' + s.id, () => putIdx(summarize(s)), 1500);
   };
 
@@ -145,7 +198,7 @@ window.GAX = (() => {
     const s = { id: 'OPN-' + Date.now().toString(36).toUpperCase(), branch: r.branch, cat: r.cat, date: today(), by: who(), byId: (user() || {}).id || '', status: 'draft', createdAt: Date.now(), lines, extra: {} };
     lset(LSS(s.id), s);
     putIdx(summarize(s));
-    if (window.db) { const { setDoc, doc } = window.fbDeps; setDoc(doc(window.db, 'settings', sdoc(s.id)), s).catch(e => console.warn(e)); }
+    mark(s.id, 's'); send(sdoc(s.id), s, s.id, 's', false);
     OPN.open(s.id, s);
   };
 
@@ -155,7 +208,7 @@ window.GAX = (() => {
     const s = await loadSession(id); if (!s) { OPN.view = 'list'; OPN.cur = null; return OPN.render(); }
     OPN.cur = s; OPN.view = s.status === 'final' ? 'result' : 'count';
     if (s.status !== 'final') watch(id);
-    OPN.render();
+    OPN.render(); flush();
   };
   OPN.back = function () { unwatch(); OPN.view = 'list'; OPN.cur = null; OPN.render(); };
 
@@ -175,7 +228,8 @@ window.GAX = (() => {
   function rowHTML(id, l) {
     const d = diffOf(l), cls = d == null ? '' : d < 0 ? 'ga-diff-neg' : d > 0 ? 'ga-diff-pos' : 'ga-done';
     const badgeD = d == null ? '' : d === 0 ? '<span class="text-emerald-400 font-bold">Sesuai</span>' : `<span class="${d < 0 ? 'text-rose-400' : 'text-amber-400'} font-bold">${d > 0 ? 'Lebih ' : 'Kurang '}${Math.abs(d)}</span>`;
-    return `<div class="ga-count-row ${cls}" data-id="${esc(id)}"><div class="min-w-0"><div class="font-bold text-white text-sm break-words">${esc(l.n)}</div>
+    const un = OPN.cur && OUT[OPN.cur.id] && OUT[OPN.cur.id]['l:' + id] ? ' is-unsynced' : '';
+    return `<div class="ga-count-row ${cls}${un}" data-id="${esc(id)}"><div class="min-w-0"><div class="font-bold text-white text-sm break-words">${esc(l.n)}<span class="ga-sync" role="img" aria-label="Belum tersinkron" title="Belum tersinkron ke server"><i class="fa-solid fa-cloud-arrow-up" aria-hidden="true"></i></span></div>
       <div class="text-[11px] text-dobah-200/60">${esc(id)}${l.c ? ' · ' + esc(l.c) : ''} · Sistem: <b class="text-dobah-200">${l.e}</b>${l.ol ? ` <span class="text-amber-400">(+${l.ol} dipinjam)</span>` : ''} ${badgeD ? '· ' + badgeD : ''}</div>
       <div class="flex gap-2 mt-2"><select onchange="OPN.setCond(this)" class="glass-input px-2 py-1.5 text-[11px] font-semibold">${Object.entries(COND).map(([k, v]) => `<option value="${k}" ${l.cond === k ? 'selected' : ''}>${v}</option>`).join('')}</select>
       <input value="${esc(l.note || '')}" onchange="OPN.setNote(this)" placeholder="Catatan (opsional)" class="glass-input px-2 py-1.5 text-[11px] flex-1 min-w-0"></div></div>
@@ -203,8 +257,53 @@ window.GAX = (() => {
   function updHead() {
     const s = OPN.cur, st = stats(s), p = st.total ? Math.round(st.done / st.total * 100) : 0, h = $('opnHead'); if (!h) return;
     h.innerHTML = `<div class="flex justify-between text-[11px] font-mono text-dobah-200 mb-1"><span>Progres ${st.done}/${st.total}</span><span class="font-bold text-dobah-400">${p}%</span></div><div class="ga-bar"><span style="width:${p}%"></span></div>
-      <div class="flex flex-wrap gap-2 mt-3 text-[11px]"><span class="text-emerald-400 font-bold">${st.ok} sesuai</span><span class="text-rose-400 font-bold">${st.short} kurang</span><span class="text-amber-400 font-bold">${st.over} lebih</span><span class="text-dobah-200/60">${st.total - st.done} belum dihitung</span></div>`;
+      <div class="flex flex-wrap gap-2 mt-3 text-[11px]"><span class="text-emerald-400 font-bold">${st.ok} sesuai</span><span class="text-rose-400 font-bold">${st.short} kurang</span><span class="text-amber-400 font-bold">${st.over} lebih</span><span class="text-dobah-200/60">${st.total - st.done} belum dihitung</span></div>
+      <div class="mt-3" id="opnSyncHead">${chip(s.id)}</div>`;
+    const f = $('opnSyncFoot'); if (f) f.innerHTML = chip(s.id); // chip di footer yang menempel (terlihat saat daftar di-scroll) harus selalu sama dengan chip header
   }
+
+  /* ---------- indikator "belum tersinkron" ---------- */
+  function syncState(sid) {
+    const i = outInfo(sid), on = navigator.onLine !== false;
+    if (!window.db) return { c: 'warn', i: 'fa-triangle-exclamation', t: 'Mode lokal: hitungan hanya ada di perangkat ini' };
+    if (i.rej) return { c: 'bad', i: 'fa-circle-xmark', t: `${i.rej} perubahan ditolak server` };
+    if (i.pend) return { c: 'warn', i: 'fa-cloud-arrow-up', spin: on, t: `${on ? 'Mengirim' : 'Offline'} · ${i.pend} item belum tersinkron` };
+    if (i.meta) return { c: 'warn', i: 'fa-cloud-arrow-up', spin: on, t: on ? 'Menyinkronkan data sesi…' : 'Offline · data sesi belum tersinkron' };
+    return { c: 'ok', i: 'fa-circle-check', t: 'Semua hitungan tersinkron' };
+  }
+  function chip(sid) {
+    const x = syncState(sid);
+    return `<button type="button" class="ga-sync-chip ${x.c}" onclick="OPN.syncInfo('${esc(sid)}')" aria-label="${esc(x.t)}. Ketuk untuk detail"><i class="fa-solid ${x.i}${x.spin ? ' ga-spin' : ''}" aria-hidden="true"></i><span>${x.t}</span></button>`;
+  }
+  let pT = 0;
+  function paintSoon() { clearTimeout(pT); pT = setTimeout(paint, 120); }
+  function paint() {
+    if (appState.activeTab !== 'aopn') return;
+    const s = OPN.cur;
+    if (OPN.view === 'count' && s) {
+      updHead(); // sekaligus menyegarkan chip footer
+      // ganti kelas saja (bukan seluruh baris) supaya angka yang sedang diketik tidak terganggu
+      document.querySelectorAll('#opnRows .ga-count-row').forEach(el => el.classList.toggle('is-unsynced', !!(OUT[s.id] && OUT[s.id]['l:' + el.dataset.id])));
+    } else if (OPN.view === 'list') OPN.render();
+  }
+  OPN.syncInfo = async function (sid) {
+    const i = outInfo(sid), x = syncState(sid), on = navigator.onLine !== false;
+    let msg;
+    if (!window.db) msg = 'Aplikasi sedang tidak terhubung ke server. Hitungan tersimpan di perangkat ini dan akan dikirim setelah koneksi pulih.';
+    else if (i.rej) msg = `Server menolak ${i.rej} perubahan. Biasanya karena sesi ini sudah diselesaikan atau akun tidak punya akses ke cabangnya. Hitungan tetap aman di perangkat ini. Hubungi GA bila perlu.`;
+    else if (i.pend || i.meta) msg = `${on ? 'Sinyal masih lemah atau server belum membalas.' : 'Perangkat sedang offline.'} Hitungan SUDAH tersimpan di perangkat ini dan akan terkirim otomatis begitu koneksi stabil. Anda boleh lanjut menghitung. Jangan logout atau menghapus data browser sebelum statusnya “Semua hitungan tersinkron”.`;
+    else msg = 'Semua hitungan sudah dikonfirmasi tersimpan di server.';
+    const r = await Swal.fire({ title: x.t, text: msg, icon: x.c === 'ok' ? 'success' : x.c === 'bad' ? 'error' : 'info', ...SW, showDenyButton: !!(i.rej || i.pend || i.meta), denyButtonText: 'Kirim ulang sekarang', confirmButtonText: 'Tutup' });
+    if (r.isDenied) {
+      Object.values(OUT[sid] || {}).forEach(m => { if (m.st === 'r') m.st = 'p'; }); outSave(); flush();
+      Swal.fire({ toast: true, position: 'top-end', icon: 'info', title: 'Mencoba mengirim…', showConfirmButton: false, timer: 2000 });
+    }
+  };
+  // pemicu kirim ulang: koneksi pulih, aplikasi dibuka kembali, dan berkala (hanya catatan yang tulisannya sempat gagal sementara)
+  window.addEventListener('online', () => { flush(); paintSoon(); });
+  window.addEventListener('offline', paintSoon);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) { flush(); paintSoon(); } });
+  setInterval(() => { if (totalPend()) flush(); }, 45000);
   OPN.filter = (k, v) => { OPN.f[k] = v; if (k === 'mode') OPN.render(); else listRows(); };
   function listRows() {
     const s = OPN.cur, f = OPN.f, qq = f.q.toLowerCase();
@@ -228,12 +327,13 @@ window.GAX = (() => {
   /* ---------- finalisasi ---------- */
   OPN.finish = async function () {
     const s = OPN.cur; if (!s || s.status === 'final') return;
-    const st = stats(s), todo = st.total - st.done;
-    const ok = await confirmBox('Selesaikan opname?', `${st.done} dari ${st.total} item sudah dihitung.${todo ? ` ${todo} item belum dihitung akan dicatat “tidak dicek” dan TIDAK dianggap selisih.` : ''} Setelah selesai, hasil tidak bisa diubah.`);
+    const st = stats(s), todo = st.total - st.done, oi = outInfo(s.id);
+    const ok = await confirmBox('Selesaikan opname?', `${st.done} dari ${st.total} item sudah dihitung.${todo ? ` ${todo} item belum dihitung akan dicatat “tidak dicek” dan TIDAK dianggap selisih.` : ''}${oi.pend ? ` ${oi.pend} perubahan belum terkonfirmasi server; semuanya ikut terkirim otomatis begitu sinyal tersedia.` : ''} Setelah selesai, hasil tidak bisa diubah.`);
     if (!ok) return;
     s.status = 'final'; s.finalizedAt = Date.now(); s.finalizedBy = who(); s.sum = noVal(stats(s));
     lset(LSS(s.id), s);
-    if (window.db) { const { setDoc, doc } = window.fbDeps; setDoc(doc(window.db, 'settings', sdoc(s.id)), s, { merge: true }).catch(e => console.warn(e)); }
+    // Dokumen final memuat SEMUA baris, jadi begitu server mengonfirmasinya catatan baris/barang sesi ini tidak perlu lagi.
+    mark(s.id, 's'); send(sdoc(s.id), s, s.id, 's').then(ok => { if (ok) dropMarks(s.id, k => k[0] === 'l' || k[0] === 'x'); });
     putIdx(summarize(s)); unwatch();
     // Tulis ke Riwayat aset yang selisih / kondisinya tidak baik
     let n = 0; const tgl = new Date().toLocaleDateString('id-ID');
@@ -250,6 +350,7 @@ window.GAX = (() => {
     if (!(isGA() || sum.status === 'draft')) return deny();
     if (!(await confirmBox('Hapus sesi opname?', 'Sesi dan hasil hitungannya akan dihapus.'))) return;
     sum.deleted = true; putIdx(sum); try { localStorage.removeItem(LSS(id)); } catch (e) {}
+    dropMarks(id, k => k !== 'i'); // sesinya dihapus: hitungannya tidak perlu dikirim; ringkasan 'deleted' tetap dikirim
     if (window.db) { const { deleteDoc, doc } = window.fbDeps; deleteDoc(doc(window.db, 'settings', sdoc(id))).catch(() => {}); }
     OPN.render();
   };
@@ -269,9 +370,10 @@ window.GAX = (() => {
     const L = visibleIdx(), run = L.filter(s => s.status === 'draft'), fin = L.filter(s => s.status === 'final');
     const monthShort = fin.filter(s => (s.finalizedAt || 0) > Date.now() - 30 * 864e5).reduce((n, s) => n + ((s.sum || {}).shortQty || 0), 0);
     const rows = L.map(s => {
-      const p = s.total ? Math.round(s.counted / s.total * 100) : 0, sm = s.sum || {};
+      const p = s.total ? Math.round(s.counted / s.total * 100) : 0, sm = s.sum || {}, oi = outInfo(s.id),
+        un = oi.rej ? `<br><span class="text-[11px] text-rose-400 font-bold"><i class="fa-solid fa-circle-xmark mr-1"></i>${oi.rej} ditolak server</span>` : (oi.pend || oi.meta) ? `<br><span class="text-[11px] text-amber-400 font-bold"><i class="fa-solid fa-cloud-arrow-up mr-1"></i>${oi.pend ? oi.pend + ' item ' : 'Data sesi '}belum tersinkron</span>` : '';
       return `<tr class="hover:bg-white/[0.02]"><td class="p-4 font-bold text-white">${esc(s.branch)}${sub(esc(s.id) + (s.cat ? ' · ' + esc(s.cat) : ''))}</td><td class="p-4">${esc(s.date)}${sub(esc(s.by))}</td>
-        <td class="p-4">${s.status === 'final' ? `<span class="text-emerald-400 font-bold">Selesai</span>${sub('Kurang ' + (sm.shortQty || 0) + ' · Lebih ' + (sm.overQty || 0) + ' unit')}` : `<span class="text-amber-400 font-bold">Berjalan</span>${sub(s.counted + '/' + s.total + ' (' + p + '%)')}`}</td>
+        <td class="p-4">${s.status === 'final' ? `<span class="text-emerald-400 font-bold">Selesai</span>${sub('Kurang ' + (sm.shortQty || 0) + ' · Lebih ' + (sm.overQty || 0) + ' unit')}` : `<span class="text-amber-400 font-bold">Berjalan</span>${sub(s.counted + '/' + s.total + ' (' + p + '%)')}`}${un}</td>
         <td class="p-4 whitespace-nowrap">${btn(`OPN.open('${s.id}')`, s.status === 'final' ? 'fa-list-check' : 'fa-pen-to-square', s.status === 'final' ? 'Lihat hasil' : 'Lanjutkan hitung')}${(isGA() || s.status === 'draft') ? btn(`OPN.remove('${s.id}')`, 'fa-trash-can', 'Hapus', 'text-rose-400') : ''}</td></tr>`;
     }).join('');
     return `<div class="grid grid-cols-1 sm:grid-cols-3 gap-4">${kpi('Opname Berjalan', run.length, 'fa-list-check', 'amber')}${kpi('Opname Selesai', fin.length, 'fa-circle-check', 'emerald')}${kpi('Unit Kurang (30 hari)', monthShort, 'fa-triangle-exclamation', 'rose')}</div>
@@ -290,7 +392,7 @@ window.GAX = (() => {
         ${ch.map(([k, l]) => `<button onclick="OPN.filter('mode','${k}')" class="ga-chip ${f.mode === k ? 'on' : ''}">${l}</button>`).join('')}</div>
       <div id="opnRows" class="space-y-2"></div>
       ${ex.length ? `<div class="glass-panel p-4"><h4 class="text-xs font-bold text-white mb-2">Barang tidak terdaftar</h4><div class="space-y-1.5 text-xs">${ex.map(([id, x]) => `<div class="ga-file-row"><span><b class="text-white">${esc(x.name)}</b> × ${x.qty}${x.note ? sub(esc(x.note)) : ''}</span><button onclick="OPN.delExtra('${id}')" class="text-rose-400 text-[11px] font-bold">Hapus</button></div>`).join('')}</div></div>` : ''}
-      <div class="ga-sticky-foot flex flex-wrap gap-2 justify-end"><button onclick="OPN.addExtra()" class="modern-button bg-cocoa-800 text-dobah-200 text-xs font-bold px-4 py-2.5 border border-white/10"><i class="fa-solid fa-plus mr-1"></i>Barang tak terdaftar</button>
+      <div class="ga-sticky-foot flex flex-wrap gap-2 justify-end items-center"><span id="opnSyncFoot" class="mr-auto" role="status" aria-live="polite">${chip(s.id)}</span><button onclick="OPN.addExtra()" class="modern-button bg-cocoa-800 text-dobah-200 text-xs font-bold px-4 py-2.5 border border-white/10"><i class="fa-solid fa-plus mr-1"></i>Barang tak terdaftar</button>
         <button onclick="OPN.finish()" class="modern-button bg-dobah-400 text-cocoa-950 text-xs font-bold px-5 py-2.5"><i class="fa-solid fa-flag-checkered mr-1"></i>Selesaikan Opname</button></div>`;
   }
   function resultView() {
@@ -358,5 +460,5 @@ window.GAX = (() => {
   };
 
   GAX.regTab('aopn', { title: 'Stock Opname', render: () => { OPN.render(); loadIdx(true); } });
-  window.addEventListener('profile-ready', () => loadIdx(false).then(() => OPN.notify()));
+  window.addEventListener('profile-ready', () => loadIdx(false).then(() => { OPN.notify(); flush(); }));
 })();
