@@ -16,7 +16,42 @@
 .ga-bar>span{display:block;height:100%;background:#f4a23a;transition:width .2s}
 /* utilitas yang belum ada di css/tailwind.css */
 .items-end{align-items:flex-end}.line-through{text-decoration-line:line-through}.max-h-56{max-height:14rem}.mb-4{margin-bottom:1rem}.py-8{padding-top:2rem;padding-bottom:2rem}
-.min-w-\[140px\]{min-width:140px}.min-w-\[160px\]{min-width:160px}
+.min-w-\[140px\]{min-width:140px}.min-w-\[160px\]{min-width:160px}.mr-auto{margin-right:auto}
+
+/* ---- Indikator "belum tersinkron" (opname) ---- */
+.ga-sync-chip{display:inline-flex;align-items:center;gap:7px;padding:6px 12px;border-radius:999px;font-size:11px;font-weight:800;line-height:1.25;text-align:left;border:1px solid transparent;cursor:pointer;max-width:100%}
+.ga-sync-chip.ok{background:rgba(52,211,153,.12);color:#6ee7a0;border-color:rgba(52,211,153,.32)}
+.ga-sync-chip.warn{background:rgba(251,191,36,.14);color:#fcd34d;border-color:rgba(251,191,36,.42)}
+.ga-sync-chip.bad{background:rgba(251,113,133,.15);color:#fda4af;border-color:rgba(251,113,133,.48)}
+.ga-sync-chip:focus-visible{outline:2px solid #f4a23a;outline-offset:2px}
+.ga-sync{display:none;margin-left:8px;font-size:11px;color:#fbbf24;vertical-align:1px;white-space:nowrap}
+.ga-count-row.is-unsynced .ga-sync{display:inline-block}
+.ga-spin{animation:ga-spin 1.2s linear infinite}
+@keyframes ga-spin{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.ga-spin{animation:none}}
+html[data-theme="light"] .ga-sync-chip.ok{background:rgba(5,150,105,.12);color:#065f46;border-color:rgba(5,150,105,.38)}
+html[data-theme="light"] .ga-sync-chip.warn{background:rgba(217,119,6,.14);color:#92400e;border-color:rgba(217,119,6,.45)}
+html[data-theme="light"] .ga-sync-chip.bad{background:rgba(225,29,72,.10);color:#9f1239;border-color:rgba(225,29,72,.42)}
+html[data-theme="light"] .ga-sync{color:#92400e}
+
+/* ---- Kartu "Perlu tindakan hari ini" (Dashboard Aset, GA) ---- */
+.gt-sec{border-radius:14px;padding:12px 14px;background:rgba(21,10,5,.55);border:1px solid rgba(255,255,255,.07)}
+.gt-sec.has{border-color:rgba(244,162,58,.38)}
+.gt-n{min-width:26px;text-align:center;padding:2px 8px;border-radius:999px;font:800 12px 'JetBrains Mono',monospace;background:#331d14;color:#e1b782}
+.gt-sec.has .gt-n{background:#f4a23a;color:#1b100c}
+.gt-total{display:inline-flex;align-items:center;padding:4px 12px;border-radius:999px;font-size:11px;font-weight:800;background:rgba(52,211,153,.12);color:#6ee7a0;border:1px solid rgba(52,211,153,.32)}
+.gt-total.has{background:rgba(244,162,58,.16);color:#f4a23a;border-color:rgba(244,162,58,.45)}
+.gt-line{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;margin-top:8px;padding:9px 11px;border-radius:10px;font-size:12px;text-align:left;background:rgba(0,0,0,.2);border:1px solid rgba(255,255,255,.05);cursor:pointer;transition:border-color .15s}
+.gt-line:hover,.gt-line:focus-visible{border-color:rgba(244,162,58,.55);outline:none}
+.gt-none{margin-top:8px}
+.gt-more{margin-top:10px;cursor:pointer;background:none;border:0;padding:0}
+html[data-theme="light"] .gt-sec{background:rgba(255,255,255,.62);border-color:rgba(110,60,15,.16)}
+html[data-theme="light"] .gt-sec.has{border-color:rgba(217,125,38,.5)}
+html[data-theme="light"] .gt-n{background:rgba(110,60,15,.12);color:#5c3113}
+html[data-theme="light"] .gt-sec.has .gt-n{background:#d97d26;color:#fff}
+html[data-theme="light"] .gt-total{background:rgba(5,150,105,.12);color:#065f46;border-color:rgba(5,150,105,.38)}
+html[data-theme="light"] .gt-total.has{background:rgba(217,125,38,.16);color:#7c3f05;border-color:rgba(217,125,38,.5)}
+html[data-theme="light"] .gt-line{background:rgba(255,255,255,.75);border-color:rgba(110,60,15,.14)}
 
 /* ---- Video tutorial ---- */
 .tut-btn{display:inline-flex;align-items:center;gap:.5rem;margin-top:.9rem;padding:.55rem 1rem;border-radius:999px;font-size:.78rem;font-weight:800;cursor:pointer;
