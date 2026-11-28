@@ -243,6 +243,8 @@
             loadLocalState(); 
             checkUserSession();
             document.getElementById('formSubmissionDate').value = new Date().toISOString().split('T')[0];
+            const cd = document.getElementById('clock-date-today'); // "HARI INI" di header form: dulunya teks tetap, sekarang mengikuti tanggal perangkat
+            if (cd) cd.textContent = new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
             addFormItemRow();
             if(appState.activeTab === 'list') switchTab('list');
         });
@@ -283,6 +285,39 @@
         /* --- CETAK PENGAJUAN --- */
         let currentDetailIdx = null;
         function esc(v) { return String(v == null ? '' : v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
+
+        /* Kirim ringkasan pengajuan lewat WhatsApp (khusus GA Manager). Penerima dipilih langsung di WhatsApp, sama seperti pengingat tagihan.
+           Catatan: tautan wa.me hanya membawa TEKS; foto bukti tidak ikut terkirim. */
+        function sendTicketWA(idx) {
+            const u = getCurrentUser();
+            if (!u || u.role !== 'General Affair Manager') return; // tombolnya juga hanya digambar untuk GA
+            const r = appState.requests[idx];
+            if (!r) return Swal.fire('Info', 'Tiket tidak ditemukan.', 'info');
+            const PR = { Low: 'Rendah', Medium: 'Sedang', High: 'Tinggi', Critical: 'Darurat' };
+            const items = r.items || [], MAXI = 8;
+            const lines = items.slice(0, MAXI).map((it, i) => {
+                const cost = Number(it.cost) > 0 ? ' - ' + formatRupiah(it.cost * (it.qty || 1)) : '';
+                const why = it.notes ? '\n   Alasan: ' + String(it.notes).slice(0, 90) : '';
+                return `${i + 1}. ${it.name || '-'} - ${it.qty || 1} ${it.unit || 'Unit'}${cost}${why}`;
+            });
+            if (items.length > MAXI) lines.push(`+${items.length - MAXI} item lainnya (lihat di aplikasi)`);
+            const total = items.reduce((s, it) => s + (Number(it.cost) || 0) * (it.qty || 1), 0);
+            const msg = [
+                `*Pengajuan Aset - ${r.id}*`,
+                `Cabang: ${r.branch || '-'}`,
+                `Pemohon: ${ticketApplicant(r) || '-'}${r.division ? ' (' + r.division + ')' : ''}`,
+                `Tanggal: ${r.submissionDate || '-'}`,
+                `Prioritas: ${PR[r.urgency] || r.urgency || '-'}`,
+                `Status: ${(TSTAT[r.status] || {}).label || r.status || '-'}`,
+                '',
+                `*Rincian (${items.length} item)*`,
+                ...lines,
+                ...(total > 0 ? ['', `Total estimasi: ${formatRupiah(total)}`] : []),
+                '',
+                'Mohon ditindaklanjuti. Terima kasih. - Divisi GA'
+            ].join('\n');
+            window.open('https://wa.me/?text=' + encodeURIComponent(msg), '_blank', 'noopener');
+        }
 
         async function printRequest(idx) {
             const i0 = (typeof idx === 'number') ? idx : currentDetailIdx;
@@ -747,6 +782,7 @@
 
                 let btns = isGA
                     ? `<button type="button" onclick="printRequest(${actIdx})" class="tk-print" title="Cetak form pengajuan" aria-label="Cetak form pengajuan"><i class="fa-solid fa-print text-[13px]"></i></button>
+                       <button type="button" onclick="sendTicketWA(${actIdx})" class="tk-print tk-wa" title="Kirim pengajuan via WhatsApp" aria-label="Kirim pengajuan via WhatsApp"><i class="fa-brands fa-whatsapp text-[15px]"></i></button>
                        ${req.pendingEdit ? `<button type="button" onclick="reviewPendingEdit(${actIdx})" class="tk-act tk-review" title="Ada perubahan dari staf yang menunggu keputusan">Tinjau Ubahan</button>` : ''}<button type="button" onclick="openEditModal(${actIdx})" class="tk-act">Detail / Ubah</button>
                        <button type="button" onclick="deleteRequest(${actIdx}, '${req.docId}')" class="tk-del" title="Hapus tiket" aria-label="Hapus tiket"><i class="fa-regular fa-trash-can text-[13px]"></i></button>`
                     : `<button type="button" onclick="printRequest(${actIdx})" class="tk-print" title="Cetak form pengajuan" aria-label="Cetak form pengajuan"><i class="fa-solid fa-print text-[13px]"></i></button>
