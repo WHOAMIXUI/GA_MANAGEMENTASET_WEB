@@ -44,41 +44,65 @@ function mkt(){const all=canAll(),mb=myBranches(),t=AM.mktTab||'browse';
  if(t==='browse')mktCards()}
 AM.mTab=function(k){AM.mktTab=k;mkt()};
 AM.mQ=function(v){AM.mq=v;mktCards()};
+/* --- jual aset: BEBERAPA aset sekaligus ---
+   Satu toko penjual + satu toko pembeli + satu catatan, lalu banyak baris aset (jumlah & harga per baris).
+   Tiap baris menjadi SATU listing biasa (jadi beli / ubah / batal / cetak tidak berubah); listing dari satu pengiriman diberi tanda `batch` yang sama. */
 AM.sell=async function(pre){if(!isGA())return deny();const E=mine().filter(a=>a.status==='Good'&&a.branch&&freeQty(a)>=1);
  if(!E.length)return Swal.fire({title:'Tidak ada aset yang bisa dijual',text:'Hanya aset berstatus Baik, sudah punya cabang, dan tidak sedang dipinjam / dilisting penuh yang bisa dijual.',icon:'info',...WN});
  if(allStores().length<2)return Swal.fire({title:'Cabang belum cukup',text:'Jual beli antar toko butuh minimal 2 cabang di Master Data.',icon:'info',...WN});
- // 1) kelompokkan aset yang boleh dijual per toko penjual
  const by={};E.forEach(a=>(by[a.branch]=by[a.branch]||[]).push(a));const stores=Object.keys(by).sort();
  const pa=pre&&E.find(a=>a.id===pre),st0=pa?pa.branch:stores[0],a0=pa||by[st0][0];
- const aOpts=b=>(by[b]||[]).map(a=>[a.id,`${a.name} (tersedia ${freeQty(a)} unit · ±${rp(perUnit(a))}/unit)`]);
+ const inp='w-full px-3 py-2 text-sm rounded-lg bg-[#150a05] border border-white/10 text-white',lab='block text-left text-xs font-bold mb-1 mt-3 text-[#edd5b3]';
  const toOpts=b=>[['','Semua toko (terbuka, siapa saja boleh beli)'],...buyerStores(b).map(x=>[x,x])];
- const fill=(id,opts)=>{const el=$(id);if(el)el.innerHTML=opts.map(o=>`<option value="${esc(o[0])}">${esc(o[1])}</option>`).join('')};
- const r=await ask('Jual Aset ke Toko Lain',[
-  {k:'from',l:'Aset yang akan dijual — pilih toko',v:st0,opts:stores.map(b=>[b,`${b} — ${by[b].length} jenis aset, ${by[b].reduce((n,a)=>n+freeQty(a),0)} unit tersedia`])},
-  {k:'a',l:'Pilih aset di toko tersebut',v:a0.id,opts:aOpts(st0)},
-  {k:'qty',l:'Jumlah unit dijual',t:'number',v:1},
-  {k:'price',l:'Harga jual per unit (Rp)',t:'number',v:perUnit(a0)},
-  {k:'to',l:'Dibeli oleh toko mana?',v:'',opts:toOpts(st0)},
-  {k:'note',l:'Catatan (kondisi, alasan jual, dll)'}],'Pasang Listing',{
-  html:'<div id="swSum" class="mt-4 p-3 rounded-lg text-left text-xs leading-relaxed bg-[#150a05] border border-white/10 text-[#edd5b3]"></div>',
-  open:()=>{const F=$('sw_from'),A=$('sw_a'),Q=$('sw_qty'),P=$('sw_price'),T=$('sw_to');
-   // ringkasan langsung: stok, total, selisih terhadap nilai buku, dan siapa pembelinya
-   const upd=()=>{const a=find(A.value),box=$('swSum');if(!a||!box)return;const mx=freeQty(a),n=parseInt(Q.value)||0,p=Number(P.value)||0,bk=perUnit(a),d=p-bk,who=T.value;Q.min=1;Q.max=mx;
-    box.innerHTML=`<div>Tersedia <b>${mx}</b> unit di <b>${esc(a.branch)}</b> · nilai buku ±<b>${rp(bk)}</b> / unit</div>`
-     +`<div class="mt-1">Total jual: <b>${rp(n*p)}</b> (${n} × ${rp(p)})${p===0?' · <span class="text-amber-400">Rp 0 = serah tanpa pembayaran</span>':d<0?` · <span class="text-amber-400">${rp(-d)} / unit di bawah nilai buku</span>`:d>0?` · <span class="text-emerald-400">${rp(d)} / unit di atas nilai buku</span>`:''}</div>`
-     +`<div class="mt-1">Pembeli: <b>${who?esc(who):'Semua toko (terbuka)'}</b>${who?' — hanya toko ini yang bisa membeli':''}</div>`};
-   const onAsset=()=>{const a=find(A.value);if(a){Q.value=1;P.value=perUnit(a)}upd()};
-   // ganti toko penjual -> daftar aset ikut berganti, toko pembeli tidak boleh sama dengan penjual
-   F.onchange=()=>{const keep=T.value;fill('sw_a',aOpts(F.value));fill('sw_to',toOpts(F.value));T.value=(keep&&keep!==F.value&&buyerStores(F.value).includes(keep))?keep:'';onAsset()};
-   A.onchange=onAsset;[Q,P,T].forEach(el=>{el.oninput=upd;el.onchange=upd});upd()},
-  check:o=>{const a=find(o.a);if(!a)return 'Aset tidak ditemukan';if(a.branch!==o.from)return 'Aset bukan milik toko yang dipilih';
-   const n=parseInt(o.qty),mx=freeQty(a);if(!(n>=1&&n<=mx))return `Jumlah harus antara 1 dan ${mx}`;
-   if(o.price===''||!(Number(o.price)>=0))return 'Harga jual wajib diisi';
-   if(o.to){if(o.to===a.branch)return 'Toko pembeli tidak boleh sama dengan toko penjual';if(!allStores().includes(o.to))return 'Toko pembeli tidak dikenal'}
-   return ''}});
- if(!r)return;const a=find(r.a),n=parseInt(r.qty),p=Number(r.price)||0,to=r.to||'';
- AM.market.push({id:'MKT-'+Date.now().toString(36).toUpperCase(),assetId:a.id,name:a.name,category:a.category,branch:a.branch,to,qty:n,left:n,price:p,note:r.note,status:'Open',createdBy:(user()||{}).name||'-',createdAt:stamp(),ts:Date.now()});
- hist(a,`Dilisting dijual ${n} unit @ ${rp(p)} — ${to?'khusus '+to:'terbuka untuk semua toko'} (Pasar Antar Toko)`);AM.mktTab='mine';await save();switchTab('amkt')};
+ const oh=(opts,sel)=>opts.map(o=>`<option value="${esc(o[0])}"${o[0]===sel?' selected':''}>${esc(o[1])}</option>`).join('');
+ const short=l=>l.slice(0,3).join(', ')+(l.length>3?` +${l.length-3} lainnya`:'');
+ let rows=[{id:a0.id,qty:1,price:perUnit(a0)}];
+ const html=`<label class="${lab}">Toko penjual</label><select id="sl_from" class="${inp}">${oh(stores.map(b=>[b,`${b} — ${by[b].length} jenis aset, ${by[b].reduce((n,a)=>n+freeQty(a),0)} unit tersedia`]),st0)}</select>
+  <div class="sl-head text-[#edd5b3]"><span>Aset yang dijual</span><span>Jumlah</span><span>Harga / unit (Rp)</span><span></span></div>
+  <div id="sl_rows" class="sl-rows"></div>
+  <button type="button" id="sl_add" class="sl-add"><i class="fa-solid fa-plus mr-1"></i>Tambah aset</button>
+  <label class="${lab}">Dibeli oleh toko mana?</label><select id="sl_to" class="${inp}">${oh(toOpts(st0),'')}</select>
+  <label class="${lab}">Catatan (kondisi, alasan jual, dll) — berlaku untuk semua aset</label><input id="sl_note" type="text" class="${inp}">
+  <div id="swSum" class="mt-4 p-3 rounded-lg text-left text-xs leading-relaxed bg-[#150a05] border border-white/10 text-[#edd5b3]"></div>`;
+ const bad=m=>{Swal.showValidationMessage(m);return false};
+ const r=await Swal.fire({title:'Jual Aset ke Toko Lain',html,width:700,showCancelButton:true,confirmButtonText:'Pasang Listing',cancelButtonText:'Batal',background:'#22120a',color:'#fcf6f0',confirmButtonColor:'#f4a23a',
+  didOpen:()=>{const F=()=>$('sl_from').value,avail=()=>by[F()]||[];
+   const upd=()=>{const box=$('swSum');if(!box)return;const to=$('sl_to').value;let u=0,t=0;const low=[],zero=[];
+    rows.forEach(x=>{const a=find(x.id);if(!a)return;const n=parseInt(x.qty)||0,p=Number(x.price)||0;u+=n;t+=n*p;if(p===0)zero.push(a.name);else if(p<perUnit(a))low.push(a.name)});
+    box.innerHTML=`<div><b>${rows.length}</b> aset · <b>${u}</b> unit · Total jual: <b>${rp(t)}</b></div>`
+     +(zero.length?`<div class="mt-1 text-amber-400">Rp 0 (serah tanpa pembayaran): ${esc(short(zero))}</div>`:'')
+     +(low.length?`<div class="mt-1 text-amber-400">Di bawah nilai buku: ${esc(short(low))}</div>`:'')
+     +`<div class="mt-1">Pembeli: <b>${to?esc(to):'Semua toko (terbuka)'}</b>${to?' — hanya toko ini yang bisa membeli':''}</div>`;
+    const c=Swal.getConfirmButton();if(c)c.textContent=rows.length>1?`Pasang ${rows.length} Listing`:'Pasang Listing'};
+   // gambar ulang baris (aset yang sudah dipilih di baris lain tidak muncul lagi di pilihan)
+   const draw=()=>{$('sl_rows').innerHTML=rows.map((x,i)=>{const used=new Set(rows.filter((_,j)=>j!==i).map(y=>y.id)),a=find(x.id);
+     const opts=avail().filter(b=>!used.has(b.id)).map(b=>[b.id,`${b.name} (tersedia ${freeQty(b)} unit · ±${rp(perUnit(b))}/unit)`]);
+     return `<div class="sl-row" data-i="${i}"><select class="${inp} sl-a" aria-label="Aset">${oh(opts,x.id)}</select><label class="sl-f"><span class="sl-fl text-[#edd5b3]">Jumlah</span><input type="number" min="1" max="${a?freeQty(a):1}" value="${esc(x.qty)}" class="${inp} sl-q" aria-label="Jumlah unit"></label><label class="sl-f"><span class="sl-fl text-[#edd5b3]">Harga / unit (Rp)</span><input type="number" min="0" value="${esc(x.price)}" class="${inp} sl-p" aria-label="Harga jual per unit"></label><button type="button" class="sl-x" title="Hapus baris" aria-label="Hapus baris"${rows.length<2?' disabled':''}><i class="fa-solid fa-xmark"></i></button></div>`}).join('');
+    $('sl_add').disabled=rows.length>=avail().length;upd()};
+   $('sl_rows').addEventListener('change',e=>{const w=e.target.closest('.sl-row');if(!w||!e.target.classList.contains('sl-a'))return;const i=+w.dataset.i,a=find(e.target.value);if(a){rows[i]={id:a.id,qty:1,price:perUnit(a)};draw()}});
+   $('sl_rows').addEventListener('input',e=>{const w=e.target.closest('.sl-row');if(!w)return;const i=+w.dataset.i;if(e.target.classList.contains('sl-q'))rows[i].qty=e.target.value;else if(e.target.classList.contains('sl-p'))rows[i].price=e.target.value;else return;upd()});
+   $('sl_rows').addEventListener('click',e=>{const x=e.target.closest('.sl-x');if(!x||x.disabled)return;rows.splice(+x.closest('.sl-row').dataset.i,1);draw()});
+   $('sl_add').onclick=()=>{const used=new Set(rows.map(y=>y.id)),a=avail().find(b=>!used.has(b.id));if(!a)return;rows.push({id:a.id,qty:1,price:perUnit(a)});draw();const box=$('sl_rows');box.scrollTop=box.scrollHeight};
+   // ganti toko penjual -> baris dimulai ulang dengan aset toko itu; toko pembeli tidak boleh sama dengan penjual
+   $('sl_from').onchange=()=>{const keep=$('sl_to').value,first=avail()[0];rows=first?[{id:first.id,qty:1,price:perUnit(first)}]:[];$('sl_to').innerHTML=oh(toOpts(F()),(keep&&keep!==F()&&buyerStores(F()).includes(keep))?keep:'');draw()};
+   $('sl_to').onchange=upd;draw()},
+  preConfirm:()=>{const from=$('sl_from').value,to=$('sl_to').value,note=$('sl_note').value.trim(),seen=new Set();
+   if(!rows.length)return bad('Pilih minimal satu aset');
+   for(let i=0;i<rows.length;i++){const x=rows[i],a=find(x.id),k=rows.length>1?`Baris ${i+1}: `:'';
+    if(!a)return bad(k+'Aset tidak ditemukan');if(a.branch!==from)return bad(k+'Aset bukan milik toko yang dipilih');
+    if(seen.has(a.id))return bad(k+'Aset yang sama dipilih dua kali');seen.add(a.id);
+    const n=parseInt(x.qty),mx=freeQty(a);if(!(n>=1&&n<=mx))return bad(`${k}${a.name}: jumlah harus antara 1 dan ${mx}`);
+    if(x.price===''||!(Number(x.price)>=0))return bad(`${k}${a.name}: harga jual wajib diisi`)}
+   if(to){if(to===from)return bad('Toko pembeli tidak boleh sama dengan toko penjual');if(!allStores().includes(to))return bad('Toko pembeli tidak dikenal')}
+   return{to,note,rows:rows.map(x=>({id:x.id,n:parseInt(x.qty),p:Number(x.price)||0}))}}});
+ if(!r.isConfirmed)return;const v=r.value,base=Date.now(),N=v.rows.length,batch=N>1?'BTC-'+base.toString(36).toUpperCase():'',me=(user()||{}).name||'-',at=stamp();
+ // beberapa listing dibuat pada milidetik yang sama -> ID dijamin unik
+ const newId=()=>{let id,x=0;do{id='MKT-'+(base+x++).toString(36).toUpperCase()}while(AM.market.some(m=>m.id===id));return id};
+ v.rows.forEach((x,i)=>{const a=find(x.id);
+  AM.market.push({id:newId(),assetId:a.id,name:a.name,category:a.category,branch:a.branch,to:v.to,qty:x.n,left:x.n,price:x.p,note:v.note,status:'Open',createdBy:me,createdAt:at,ts:base+(N-1-i),...(batch?{batch}:{})});
+  hist(a,`Dilisting dijual ${x.n} unit @ ${rp(x.p)} — ${v.to?'khusus '+v.to:'terbuka untuk semua toko'}${batch?` (paket ${N} aset, ${batch})`:''} (Pasar Antar Toko)`)});
+ AM.mktTab='mine';await save();switchTab('amkt');
+ if(N>1)Swal.fire({toast:true,position:'top-end',icon:'success',title:`${N} aset berhasil dilisting`,showConfirmButton:false,timer:2600,background:'#22120a',color:'#fcf6f0'})};
 AM.buy=async function(id){if(!isGA())return deny();const m=AM.market.find(x=>x.id===id);if(!m||m.status!=='Open')return Swal.fire({title:'Listing tidak tersedia',text:'Aset ini sudah terjual atau dibatalkan.',icon:'info',...WN});
  const fixed=forStore(m),opts=fixed?[fixed]:(canAll()?allStores():myBranches()).filter(b=>b!==m.branch);
  if(!opts.length)return Swal.fire({title:'Tidak bisa membeli',text:'Akun Anda tidak terhubung ke cabang lain selain cabang penjual.',icon:'warning',...WN});
