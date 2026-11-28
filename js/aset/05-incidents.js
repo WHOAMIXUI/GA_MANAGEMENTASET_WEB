@@ -4,8 +4,11 @@ const dead=a=>a.status==='Disposed'||a.status==='Lost';
 const KIND={dmg_emp:['amber','Rusak — kelalaian karyawan'],dmg_use:['orange','Rusak — pemakaian wajar'],lost:['violet','Hilang'],mtc:['sky','Maintenance']};
 const KEFF={dmg_emp:'Broken',dmg_use:'Broken',lost:'Lost',mtc:'Maintenance'}; // dampak tiap klasifikasi ke status aset
 /* klasifikasi tambahan buatan GA (disimpan di appState.incidentKinds = [{id,label,effect:'Broken'|'Lost'}]) */
-function syncKinds(){Object.keys(KIND).forEach(k=>{if(k.startsWith('ik_')){delete KIND[k];delete KEFF[k]}});
- (appState.incidentKinds||[]).forEach(x=>{if(!x||!x.id)return;KIND[x.id]=[x.effect==='Lost'?'violet':'rose',x.label];KEFF[x.id]=x.effect==='Lost'?'Lost':'Broken'})}
+const KIND0={};Object.keys(KIND).forEach(k=>KIND0[k]=KIND[k].slice()); // label & warna asli klasifikasi bawaan
+function syncKinds(){Object.keys(KIND).forEach(k=>{if(k.startsWith('ik_')){delete KIND[k];delete KEFF[k]}else if(KIND0[k])KIND[k]=KIND0[k].slice()});
+ (appState.incidentKinds||[]).forEach(x=>{if(!x||!x.id||!x.label)return;
+  if(KIND0[x.id]){KIND[x.id][1]=x.label} // bawaan: hanya nama yang bisa diganti, warna & dampak tetap
+  else{KIND[x.id]=[x.effect==='Lost'?'violet':'rose',x.label];KEFF[x.id]=x.effect==='Lost'?'Lost':'Broken'}})}
 const isHid=k=>(appState.hiddenKinds||[]).includes(k);window.syncKinds=syncKinds;syncKinds();
 const kbadge=k=>{const[c,l]=KIND[k]||['slate',k];return `<span class="px-2.5 py-1 text-[10px] uppercase font-bold rounded border bg-${c}-500/10 text-${c}-400 border-${c}-500/20">${l}</span>`};
 AM.report=async function(pre){syncKinds();const E=mine().filter(a=>!dead(a)&&freeQty(a)>=1);
@@ -53,13 +56,13 @@ function incView(){syncKinds();const all=canAll(),mb=myBranches(),f=AM.incF||'al
 /* kelola klasifikasi — tampil di tab Master Data & Akun (kartu "Klasifikasi rusak / hilang").
    Hapus klasifikasi bawaan / yang sudah dipakai laporan = disembunyikan dari pilihan (laporan lama tetap menampilkan namanya, bisa dipulihkan).
    Klasifikasi buatan GA yang belum pernah dipakai dihapus permanen. */
-const kUsed=id=>AM.incidents.some(i=>i.kind===id),kCustom=id=>(appState.incidentKinds||[]).some(x=>x.id===id);
+const kUsed=id=>AM.incidents.some(i=>i.kind===id),kCustom=id=>String(id).startsWith('ik_'),kOver=id=>(appState.incidentKinds||[]).find(x=>x.id===id&&KIND0[id]);
 const kDup=(nm,self)=>Object.entries(KIND).some(([k,v])=>k!==self&&v[1].toLowerCase()===String(nm).toLowerCase());
 const kSave=async()=>{syncKinds();await saveMasterSettings();if(typeof renderMasterDataView==='function')renderMasterDataView()};
 AM.kindsRender=function(){const el=$('masterListIncKinds');if(!el)return;syncKinds();
- el.innerHTML=Object.keys(KIND).map(id=>{const h=isHid(id),bi=!kCustom(id),meta=(bi?'Bawaan':'Tambahan')+(kUsed(id)?' · dipakai laporan':'')+(h?' · dihapus dari pilihan':'');
+ el.innerHTML=Object.keys(KIND).map(id=>{const h=isHid(id),bi=!kCustom(id),meta=(bi?'Bawaan'+(kOver(id)?` · nama asli: ${esc(KIND0[id][1])}`:''):'Tambahan')+(kUsed(id)?' · dipakai laporan':'')+(h?' · dihapus dari pilihan':'');
   const btns=h?`<button onclick="AM.kindAct('res','${id}')" class="text-emerald-400 hover:text-emerald-300 px-1 text-[11px] font-bold">Pulihkan</button>`
-   :(bi?'':`<button onclick="AM.kindAct('ren','${id}')" title="Ubah nama" class="text-dobah-300 hover:text-white px-1"><i class="fa-solid fa-pen text-[11px]"></i></button>`)+`<button onclick="AM.kindAct('del','${id}')" title="Hapus" class="text-rose-400 hover:text-rose-300 px-1 font-black">&times;</button>`;
+   :`<button onclick="AM.kindAct('ren','${id}')" title="Ubah nama" class="text-dobah-300 hover:text-white px-1"><i class="fa-solid fa-pen text-[11px]"></i></button>`+`<button onclick="AM.kindAct('del','${id}')" title="Hapus" class="text-rose-400 hover:text-rose-300 px-1 font-black">&times;</button>`;
   return `<div class="flex items-center justify-between bg-cocoa-900/60 p-3 rounded-xl border border-white/10 text-xs font-semibold text-dobah-100 ${h?'opacity-60':''}"><span>${esc(KIND[id][1])}<br><span class="text-[10px] font-normal opacity-60">${meta}</span></span><span class="flex items-center gap-1">${btns}</span></div>`}).join('')};
 /* isi kartu Master Data tanpa bergantung pada app.js: bungkus renderMasterDataView + render sekali saat dimuat */
 (function(){const w=window,o=w.renderMasterDataView;if(typeof o==='function'&&!o.__kinds){const n=function(){const r=o.apply(this,arguments);try{AM.kindsRender()}catch(e){console.error('kindsRender',e)}return r};n.__kinds=1;w.renderMasterDataView=n}
@@ -70,10 +73,14 @@ AM.kindAdd=async function(){if(!isGA())return deny();
 AM.kindAct=async function(act,id){if(!isGA())return deny();syncKinds();
  const x=(appState.incidentKinds||[]).find(z=>z.id===id);
  if(act==='res'){appState.hiddenKinds=(appState.hiddenKinds||[]).filter(k=>k!==id);return kSave()}
- if(act==='ren'&&x){const n=await ask('Ubah nama klasifikasi',[{k:'l',l:'Nama',v:x.label,req:1}],'Simpan',{check:o=>kDup(o.l,id)?'Nama itu sudah dipakai':''});if(n){x.label=n.l;await kSave()}return}
+ if(act==='ren'&&KIND[id]){const n=await ask('Ubah nama klasifikasi',[{k:'l',l:'Nama',v:KIND[id][1],req:1}],'Simpan',{check:o=>kDup(o.l,id)?'Nama itu sudah dipakai':''});if(!n)return;
+  const lst=appState.incidentKinds=appState.incidentKinds||[];
+  if(KIND0[id]){const i=lst.findIndex(z=>z.id===id);if(n.l===KIND0[id][1]){if(i>=0)lst.splice(i,1)}else if(i>=0)lst[i].label=n.l;else lst.push({id,label:n.l,builtin:true})}
+  else if(x)x.label=n.l;
+  return kSave()}
  if(act==='del'){
   if(Object.keys(KIND).filter(k=>!isHid(k)&&k!==id).length<1)return Swal.fire({title:'Tidak bisa dihapus',text:'Minimal harus ada satu klasifikasi yang tersisa.',icon:'info',background:'#22120a',color:'#fcf6f0'});
-  const perm=x&&!kUsed(id);
+  const perm=kCustom(id)&&x&&!kUsed(id);
   if(!(await confirmBox('Hapus klasifikasi?',perm?`“${KIND[id][1]}” akan dihapus permanen (belum pernah dipakai laporan).`:`“${KIND[id][1]}” dihapus dari pilihan. Laporan lama tetap tampil dan bisa dipulihkan.`)))return;
   if(perm)appState.incidentKinds=appState.incidentKinds.filter(z=>z.id!==id);else{appState.hiddenKinds=appState.hiddenKinds||[];if(!appState.hiddenKinds.includes(id))appState.hiddenKinds.push(id)}
   await kSave()}};
