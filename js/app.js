@@ -342,7 +342,6 @@
                     <td class="c">${esc(it.itemStatus || 'Menunggu')}</td>
                 </tr>`).join('');
             const photos = items.filter(it => it.photo).map(it => `<figure><img src="${esc(it.photo)}" alt=""><figcaption>${esc(it.name)}</figcaption></figure>`).join('');
-            const audit = (req.audit || []).map(a => `<li>${esc(a.timestamp)} &ndash; ${esc(a.actor)}: ${esc(a.action)}</li>`).join('');
 
             document.getElementById('print-sheet').innerHTML = `
                 <div class="ps">
@@ -364,7 +363,6 @@
                         <tbody>${rows || '<tr><td colspan="6" class="c">Tidak ada item.</td></tr>'}</tbody>
                     </table>
                     ${photos ? `<h2>Foto kerusakan</h2><div class="ps-photos">${photos}</div>` : ''}
-                    ${audit ? `<h2>Riwayat aktivitas</h2><ul class="ps-hist">${audit}</ul>` : ''}
                     <div class="ps-sign">
                         <div><b>${esc(requester)}</b><span>Pemohon</span></div>
                         <div><b>&nbsp;</b><span>Kepala Cabang</span></div>
