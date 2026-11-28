@@ -1333,6 +1333,7 @@
             });
             const ce = document.getElementById('masterListContactTypes');
             if (ce) ce.innerHTML = (appState.contactTypes || []).map(t => `<div class="flex items-center justify-between bg-cocoa-900/60 p-3 rounded-xl border border-white/10 text-xs font-semibold text-dobah-100"><span>${esc(t.label)}</span><span class="flex items-center gap-1"><button onclick="promptEditContactType('${t.id}')" title="Ubah nama" class="text-dobah-300 hover:text-white px-1"><i class="fa-solid fa-pen text-[11px]"></i></button><button onclick="deleteContactType('${t.id}')" title="Hapus" class="text-rose-400 hover:text-rose-300 px-1 font-black">&times;</button></span></div>`).join('') || '<p class="text-xs italic text-dobah-200/50">Belum ada jenis. Klik Tambah.</p>';
+            if (window.AM && AM.kindsRender) AM.kindsRender();
         }
         function contactTypeValidator(v, selfId) {
             const t = (v || '').trim();
