@@ -30,7 +30,7 @@
             categories: ['SUPPORT EQUIPMENT', 'BANGUNAN', 'PERALATAN'],
             divisions: ['GA', 'HEAD STORE', 'ASST. HEAD STORE'],
             branches: ['DONAT BAHAGIA CILAKI', 'DONAT BAHAGIA CIBEUNYING', 'DONAT BAHAGIA MASKUMAMBANG'],
-            incidentKinds: [],
+            incidentKinds: [], hiddenKinds: [],
             contactTypes: [{ id: 'lokasi', label: 'Tawaran Lokasi / Tempat' }, { id: 'mesin', label: 'Sales Mesin' }, { id: 'peralatan', label: 'Peralatan & Interior' }, { id: 'lain', label: 'Vendor Lainnya' }],
             
             requests: [
@@ -76,7 +76,7 @@
                 try {
                     const { doc, setDoc } = window.fbDeps;
                     await setDoc(doc(window.db, "settings", "master_config"), {
-                        categories: appState.categories, divisions: appState.divisions, branches: appState.branches, contactTypes: appState.contactTypes, incidentKinds: appState.incidentKinds || []
+                        categories: appState.categories, divisions: appState.divisions, branches: appState.branches, contactTypes: appState.contactTypes, incidentKinds: appState.incidentKinds || [], hiddenKinds: appState.hiddenKinds || []
                     }, { merge: true });
                 } catch(err) { console.error('[Firestore] gagal simpan master_config:', err.code, err.message); }
             }
@@ -88,6 +88,7 @@
             localStorage.setItem('assetReqBranchesData', JSON.stringify(appState.branches));
             localStorage.setItem('assetReqContactTypes', JSON.stringify(appState.contactTypes));
             localStorage.setItem('assetReqIncKinds', JSON.stringify(appState.incidentKinds || []));
+            localStorage.setItem('assetReqHidKinds', JSON.stringify(appState.hiddenKinds || []));
         }
 
         function loadMasterSettings() {
@@ -96,6 +97,7 @@
             const d = localStorage.getItem('assetReqDivisionsData'); if (d) { try { appState.divisions = JSON.parse(d); } catch(e){} }
             const b = localStorage.getItem('assetReqBranchesData'); if (b) { try { appState.branches = JSON.parse(b); } catch(e){} }
             const ik = localStorage.getItem('assetReqIncKinds'); if (ik) { try { const v = JSON.parse(ik); if (Array.isArray(v)) appState.incidentKinds = v; } catch(e){} }
+            const hk = localStorage.getItem('assetReqHidKinds'); if (hk) { try { const v = JSON.parse(hk); if (Array.isArray(v)) appState.hiddenKinds = v; } catch(e){} }
             const ct = localStorage.getItem('assetReqContactTypes'); if (ct) { try { const v = JSON.parse(ct); if (Array.isArray(v)) appState.contactTypes = v; } catch(e){} }
         }
 
@@ -210,7 +212,7 @@
                         if (data.divisions) appState.divisions = data.divisions;
                         if (data.branches) appState.branches = data.branches;
                         if (Array.isArray(data.contactTypes)) appState.contactTypes = data.contactTypes;
-                        if (Array.isArray(data.incidentKinds)) { appState.incidentKinds = data.incidentKinds; if (window.syncKinds) window.syncKinds(); }
+                        if (Array.isArray(data.incidentKinds)) { appState.incidentKinds = data.incidentKinds; if (Array.isArray(data.hiddenKinds)) appState.hiddenKinds = data.hiddenKinds; if (window.syncKinds) window.syncKinds(); }
                         saveMasterSettingsToLocal();
                         if (appState.activeTab === 'master') renderMasterDataView();
                         populateDropdowns();
