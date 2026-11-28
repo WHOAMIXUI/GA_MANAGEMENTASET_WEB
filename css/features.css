@@ -53,6 +53,19 @@ html[data-theme="light"] .gt-total{background:rgba(5,150,105,.12);color:#065f46;
 html[data-theme="light"] .gt-total.has{background:rgba(217,125,38,.16);color:#7c3f05;border-color:rgba(217,125,38,.5)}
 html[data-theme="light"] .gt-line{background:rgba(255,255,255,.75);border-color:rgba(110,60,15,.14)}
 
+/* ---- Jual aset: beberapa baris sekaligus ---- */
+.sl-head,.sl-row{display:grid;grid-template-columns:minmax(0,1fr) 78px 126px 36px;gap:8px;align-items:center;text-align:left}
+.sl-head{margin-top:14px;font-size:11px;font-weight:800}
+.sl-rows{display:grid;gap:8px;margin-top:6px;max-height:40vh;overflow-y:auto;padding:2px}
+.sl-x,.sl-add{cursor:pointer;border-radius:10px;font-weight:800;border:1px solid rgba(244,162,58,.45);background:rgba(244,162,58,.14);color:#f4a23a}
+.sl-x{height:38px;border-color:rgba(251,113,133,.5);background:rgba(251,113,133,.12);color:#fb7185}
+.sl-x:disabled,.sl-add:disabled{opacity:.35;cursor:not-allowed}
+.sl-add{margin-top:10px;padding:8px 14px;font-size:12px}
+html[data-theme="light"] .sl-add{color:#9a4b05}
+html[data-theme="light"] .sl-x{color:#be123c}
+.sl-f{display:block;min-width:0}.sl-fl{display:none;font-size:10.5px;font-weight:800;margin-bottom:3px}
+@media (max-width:560px){.sl-head{display:none}.sl-row{grid-template-columns:1fr 1fr 36px}.sl-row .sl-a{grid-column:1/-1}.sl-fl{display:block}.sl-row .sl-x{grid-column:3;grid-row:2;align-self:end}}
+
 /* ---- Video tutorial ---- */
 .tut-btn{display:inline-flex;align-items:center;gap:.5rem;margin-top:.9rem;padding:.55rem 1rem;border-radius:999px;font-size:.78rem;font-weight:800;cursor:pointer;
   background:rgba(244,162,58,.16);color:#f4a23a;border:1px solid rgba(244,162,58,.5);transition:background .15s,transform .15s}
