@@ -26,7 +26,7 @@
     const d = { app: FMT, v: VERSION, at: new Date().toISOString(), by: u.name || '',
       asset: { assets: AM.assets, vendors: AM.vendors, contacts: AM.contacts, life: AM.life, loans: AM.loans, market: AM.market, trades: AM.trades, incidents: AM.incidents },
       requests: (appState.requests || []).slice(),
-      master: { categories: appState.categories, divisions: appState.divisions, branches: appState.branches, contactTypes: appState.contactTypes },
+      master: { categories: appState.categories, divisions: appState.divisions, branches: appState.branches, contactTypes: appState.contactTypes, incidentKinds: appState.incidentKinds || [] },
       opname: { index: (window.OPN && OPN.idx) || {}, sessions: {} }, audit: {}, blobs: null };
     progress('Mengambil sesi opname...');
     for (const s of Object.values(d.opname.index)) { if (s.deleted) continue; d.opname.sessions[s.id] = (await fetchDoc('settings', 'opname_' + s.id)) || lget('ga_opn_s_' + s.id); }
@@ -96,7 +96,7 @@
       for (const [id, s] of Object.entries((d.opname || {}).sessions || {})) if (s) { try { localStorage.setItem('ga_opn_s_' + id, JSON.stringify(s)); } catch (e) {} await setDoc(doc(window.db, 'settings', 'opname_' + id), s); }
       const idx = (d.opname || {}).index || {}; if (Object.keys(idx).length) { try { localStorage.setItem('ga_opn_idx', JSON.stringify(idx)); } catch (e) {} if (window.OPN) OPN.idx = idx; await setDoc(doc(window.db, 'settings', 'opname_index'), { items: idx }, { merge: true }); }
       for (const [m, e] of Object.entries(d.audit || {})) await setDoc(doc(window.db, 'settings', 'asset_audit_' + m), { e }, { merge: true });
-      if (o.master && d.master) { const mm = {}; ['categories', 'divisions', 'branches', 'contactTypes'].forEach(k => { if (Array.isArray(d.master[k])) mm[k] = d.master[k]; }); await setDoc(doc(window.db, 'settings', 'master_config'), mm, { merge: true }); }
+      if (o.master && d.master) { const mm = {}; ['categories', 'divisions', 'branches', 'contactTypes', 'incidentKinds'].forEach(k => { if (Array.isArray(d.master[k])) mm[k] = d.master[k]; }); await setDoc(doc(window.db, 'settings', 'master_config'), mm, { merge: true }); }
       if (o.req) for (const r of (d.requests || [])) { if (!r.docId) continue; const c = { ...r }; delete c.docId; await setDoc(doc(window.db, 'requests', r.docId), c); }
       if (o.blob && d.blobs) {
         for (const [fid, url] of Object.entries(d.blobs.att || {})) for (let i = 0; i * CH < url.length; i++) await setDoc(doc(window.db, 'asset_photos', `${fid}_${i}`), { data: url.slice(i * CH, (i + 1) * CH), ts: Date.now(), by: (user() || {}).name || '', kind: 'att' });
