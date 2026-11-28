@@ -23,13 +23,21 @@ function buildRows(tb){if(tb.length<2)return{err:'File kosong atau hanya berisi 
   if(id){const ids=[id];if(ids.some(x=>seen.has(x)))e.push(`ID “${id}” sudah dipakai`);else if(!e.length)ids.forEach(x=>seen.add(x))}
   if(wn.length&&!e.length)warn.push({line,name,e:wn.join('; ')});e.length?bad.push({line,name,e:e.join('; ')}):ok.push({name,category:cat||'',branch:br||'',division:dv||'',date,price,status:st,qty,id})});
  return{ok,bad,warn}}
-AM.tpl=function(){const c=(appState.categories||[])[0]||'PERALATAN',b=(appState.branches||[])[0]||'CABANG A',dv=(appState.divisions||[])[0]||'GA';
- const t=['ID (opsional),Nama,Kategori,Cabang,Divisi,Tanggal Perolehan,Harga,Status,Jumlah',`,Showcase Chiller,${c},${b},${dv},${today()},4500000,Baik,1`,`,Kursi Kasir,${c},${b},${dv},${today()},350000,Baik,5`,',Meja Kasir (kolom lain diisi nanti),,,,,,,'].join('\r\n');
- const l=document.createElement('a');l.href=URL.createObjectURL(new Blob(['\ufeff'+t],{type:'text/csv'}));l.download='template_upload_aset.csv';l.click()};
+AM.tpl=async function(){const c=(appState.categories||[])[0]||'PERALATAN',b=(appState.branches||[])[0]||'CABANG A',dv=(appState.divisions||[])[0]||'GA',t0=today();
+ const head=['ID (opsional)','Nama','Kategori','Cabang','Divisi','Tanggal Perolehan','Harga','Status','Jumlah'],
+  rows=[head,['','Showcase Chiller',c,b,dv,t0,4500000,'Baik',1],['','Kursi Kasir',c,b,dv,t0,350000,'Baik',5],['','Meja Kasir (kolom lain diisi nanti)','','','','','','','']];
+ const dl=(blob,name)=>{const l=document.createElement('a');l.href=URL.createObjectURL(blob);l.download=name;document.body.appendChild(l);l.click();l.remove();setTimeout(()=>URL.revokeObjectURL(l.href),2000)};
+ try{await loadXLSX();const ws=XLSX.utils.aoa_to_sheet(rows);
+  ws['!cols']=[{wch:14},{wch:34},{wch:22},{wch:24},{wch:12},{wch:18},{wch:12},{wch:10},{wch:8}];
+  const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Template');
+  XLSX.writeFile(wb,'template_upload_aset.xlsx')}
+ catch(e){/* fallback: CSV pemisah titik koma, dibuka rapi di Excel regional Indonesia */
+  const t=rows.map(r=>r.map(v=>{v=String(v);return /[;"\r\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v}).join(';')).join('\r\n');
+  dl(new Blob(['\ufeff'+t],{type:'text/csv'}),'template_upload_aset.csv')}};
 AM.bulk=function(){if(!isGA())return deny();AM._rows=null;
  Swal.fire({title:'Upload Aset Massal',width:680,background:'#22120a',color:'#fcf6f0',showCancelButton:true,confirmButtonText:'Impor',cancelButtonText:'Batal',confirmButtonColor:'#f4a23a',
   html:`<div class="text-left text-xs space-y-3"><p class="text-[#edd5b3]">Unggah file <b>.csv</b> atau <b>.xlsx</b>. Hanya kolom <b>Nama</b> yang wajib. Kolom lain (Kategori, Cabang, Divisi, Tanggal Perolehan, Harga, Status, Jumlah, ID) boleh dikosongkan dan diisi belakangan lewat <b>Isi Kolom</b> di Registry. Kategori/cabang/divisi yang tidak sama dengan Master Data akan dikosongkan.</p>
-  <button type="button" onclick="AM.tpl()" class="px-3 py-2 rounded-lg bg-[#331d14] border border-white/10 text-[#e1b782] font-bold"><i class="fa-solid fa-download mr-1"></i>Unduh Template CSV</button>
+  <button type="button" onclick="AM.tpl()" class="px-3 py-2 rounded-lg bg-[#331d14] border border-white/10 text-[#e1b782] font-bold"><i class="fa-solid fa-download mr-1"></i>Unduh Template (Excel)</button>
   <input id="amFile" type="file" accept=".csv,.xlsx,.xls" class="block w-full text-xs file:mr-3 file:px-3 file:py-2 file:rounded-lg file:border-0 file:bg-[#f4a23a] file:text-[#150a05] file:font-bold"><div id="amPrev"></div></div>`,
   didOpen:()=>{Swal.disableButtons();$('amFile').onchange=async e=>{const f=e.target.files[0],pv=$('amPrev');if(!f)return;pv.innerHTML='<p class="italic text-[#edd5b3]">Membaca file...</p>';AM._rows=null;Swal.disableButtons();
    try{let tb;if(/\.xlsx?$/i.test(f.name)){await loadXLSX();const wb=XLSX.read(await f.arrayBuffer(),{type:'array',cellDates:true});tb=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{header:1,raw:true,defval:''}).filter(r=>r.some(v=>String(v).trim()!==''))}else tb=parseCSV(await f.text());
