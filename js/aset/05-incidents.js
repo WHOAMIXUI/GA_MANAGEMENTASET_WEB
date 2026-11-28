@@ -61,6 +61,9 @@ AM.kindsRender=function(){const el=$('masterListIncKinds');if(!el)return;syncKin
   const btns=h?`<button onclick="AM.kindAct('res','${id}')" class="text-emerald-400 hover:text-emerald-300 px-1 text-[11px] font-bold">Pulihkan</button>`
    :(bi?'':`<button onclick="AM.kindAct('ren','${id}')" title="Ubah nama" class="text-dobah-300 hover:text-white px-1"><i class="fa-solid fa-pen text-[11px]"></i></button>`)+`<button onclick="AM.kindAct('del','${id}')" title="Hapus" class="text-rose-400 hover:text-rose-300 px-1 font-black">&times;</button>`;
   return `<div class="flex items-center justify-between bg-cocoa-900/60 p-3 rounded-xl border border-white/10 text-xs font-semibold text-dobah-100 ${h?'opacity-60':''}"><span>${esc(KIND[id][1])}<br><span class="text-[10px] font-normal opacity-60">${meta}</span></span><span class="flex items-center gap-1">${btns}</span></div>`}).join('')};
+/* isi kartu Master Data tanpa bergantung pada app.js: bungkus renderMasterDataView + render sekali saat dimuat */
+(function(){const w=window,o=w.renderMasterDataView;if(typeof o==='function'&&!o.__kinds){const n=function(){const r=o.apply(this,arguments);try{AM.kindsRender()}catch(e){console.error('kindsRender',e)}return r};n.__kinds=1;w.renderMasterDataView=n}
+ const go=()=>{try{AM.kindsRender()}catch(e){}};if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',go);else go();setTimeout(go,1500)})();
 AM.kindAdd=async function(){if(!isGA())return deny();
  const n=await ask('Klasifikasi baru',[{k:'l',l:'Nama klasifikasi',req:1},{k:'e',l:'Dampak ke status aset',opts:[['Broken','Rusak (status aset menjadi Rusak)'],['Lost','Hilang (status aset menjadi Hilang)']]}],'Tambah',{check:o=>kDup(o.l)?'Klasifikasi dengan nama itu sudah ada':''});
  if(!n)return;(appState.incidentKinds=appState.incidentKinds||[]).push({id:'ik_'+Date.now().toString(36),label:n.l,effect:n.e==='Lost'?'Lost':'Broken'});await kSave()};
