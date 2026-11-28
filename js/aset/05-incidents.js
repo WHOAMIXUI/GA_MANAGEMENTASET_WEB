@@ -6,13 +6,13 @@ const KEFF={dmg_emp:'Broken',dmg_use:'Broken',lost:'Lost',mtc:'Maintenance'}; //
 /* klasifikasi tambahan buatan GA (disimpan di appState.incidentKinds = [{id,label,effect:'Broken'|'Lost'}]) */
 function syncKinds(){Object.keys(KIND).forEach(k=>{if(k.startsWith('ik_')){delete KIND[k];delete KEFF[k]}});
  (appState.incidentKinds||[]).forEach(x=>{if(!x||!x.id)return;KIND[x.id]=[x.effect==='Lost'?'violet':'rose',x.label];KEFF[x.id]=x.effect==='Lost'?'Lost':'Broken'})}
-window.syncKinds=syncKinds;syncKinds();
+const isHid=k=>(appState.hiddenKinds||[]).includes(k);window.syncKinds=syncKinds;syncKinds();
 const kbadge=k=>{const[c,l]=KIND[k]||['slate',k];return `<span class="px-2.5 py-1 text-[10px] uppercase font-bold rounded border bg-${c}-500/10 text-${c}-400 border-${c}-500/20">${l}</span>`};
 AM.report=async function(pre){syncKinds();const E=mine().filter(a=>!dead(a)&&freeQty(a)>=1);
  if(!E.length)return Swal.fire({title:'Tidak ada aset yang bisa dilaporkan',text:'Semua unit sedang dipinjam / dijual atau sudah dihapuskan.',icon:'info',...WN});
  const r=await ask('Lapor Rusak / Hilang',[
   {k:'a',l:'Aset',v:pre,opts:E.map(a=>[a.id,`${a.name} — ${a.branch||'-'} (${freeQty(a)} unit tersedia)`])},
-  {k:'kind',l:'Klasifikasi',opts:[...Object.keys(KIND).map(k=>[k,KIND[k][1]]),...(isGA()?[['__new','➕ Tambah klasifikasi baru…']]:[])]},
+  {k:'kind',l:'Klasifikasi',opts:[...Object.keys(KIND).filter(k=>!isHid(k)).map(k=>[k,KIND[k][1]]),...(isGA()?[['__new','➕ Tambah klasifikasi baru…']]:[])]},
   {k:'qty',l:'Jumlah unit',t:'number',v:1},
   {k:'who',l:'Karyawan terkait / penanggung jawab'},
   {k:'date',l:'Tanggal kejadian',t:'date',v:today()},
@@ -45,22 +45,29 @@ AM.report=async function(pre){syncKinds();const E=mine().filter(a=>!dead(a)&&fre
 function incView(){syncKinds();const all=canAll(),mb=myBranches(),f=AM.incF||'all',ga=isGA();
  const L=AM.incidents.filter(i=>i.kind!=='mtc'&&(all||mb.includes(i.branch))).sort((a,b)=>(b.ts||0)-(a.ts||0)),V=L.filter(i=>f==='all'||i.kind===f),
   sq2=k=>L.filter(i=>i.kind===k).reduce((n,i)=>n+i.qty,0),loss=L.reduce((n,i)=>n+(i.loss||0),0),comp=L.reduce((n,i)=>n+(i.comp||0),0);
- const tabs=[['all','Semua ('+L.length+')'],...Object.keys(KIND).filter(k=>k!=='mtc').map(k=>[k,KIND[k][1]+' ('+L.filter(i=>i.kind===k).length+')'])].map(([k,l])=>`<button onclick="AM.incTab('${k}')" class="modern-button text-xs font-bold px-4 py-2 border ${f===k?'bg-dobah-400 text-cocoa-950 border-dobah-400':'bg-cocoa-800 text-dobah-200 border-white/10'}">${l}</button>`).join('');
+ const tabs=[['all','Semua ('+L.length+')'],...Object.keys(KIND).filter(k=>k!=='mtc'&&(!isHid(k)||AM.incidents.some(i=>i.kind===k))).map(k=>[k,KIND[k][1]+' ('+L.filter(i=>i.kind===k).length+')'])].map(([k,l])=>`<button onclick="AM.incTab('${k}')" class="modern-button text-xs font-bold px-4 py-2 border ${f===k?'bg-dobah-400 text-cocoa-950 border-dobah-400':'bg-cocoa-800 text-dobah-200 border-white/10'}">${l}</button>`).join('');
  const rows=V.map(i=>`<tr class="hover:bg-white/[0.02]"><td class="p-4 whitespace-nowrap">${esc(i.date)}${sub(esc(i.id))}</td><td class="p-4 font-bold text-white">${esc(i.name)}${sub(esc(i.branch)||'-')}</td><td class="p-4">${kbadge(i.kind)}${i.found?sub('<span class="text-emerald-400">Ditemukan '+esc(i.found)+'</span>'):''}</td><td class="p-4 font-mono font-bold text-white text-base">${i.qty}</td><td class="p-4">${esc(i.who)||'<span class="text-dobah-200/40">—</span>'}</td>${ga?`<td class="p-4 font-mono">${rp(i.loss)}${i.comp?sub('Ganti rugi '+rp(i.comp)):''}</td>`:''}<td class="p-4 text-xs">${esc(i.note)||'—'}${sub('Pelapor: '+esc(i.by))}</td><td class="p-4">${ga?btn(`AM.incDel('${i.id}')`,'fa-trash','Hapus catatan (aset tidak berubah)','text-rose-400'):''}</td></tr>`).join('');
  $('view-ainc').innerHTML=`<div class="grid grid-cols-2 lg:grid-cols-5 gap-4">${kpi('Rusak (karyawan)',sq2('dmg_emp')+' unit','fa-user-xmark','amber')}${kpi('Rusak (wajar)',sq2('dmg_use')+' unit','fa-wrench','rose')}${kpi('Hilang',sq2('lost')+' unit','fa-magnifying-glass','violet')}${ga?kpi('Total Kerugian',rp(loss),'fa-money-bill-trend-up','rose')+kpi('Ganti Rugi Dibebankan',rp(comp),'fa-hand-holding-dollar','emerald'):''}</div>
  <div class="flex flex-wrap justify-between items-center gap-3"><div class="flex gap-2 flex-wrap">${tabs}</div><div class="flex gap-2">${ga?'<button onclick="AM.kinds()" class="modern-button bg-cocoa-800 text-dobah-200 border border-white/10 text-xs font-bold px-4 py-2"><i class="fa-solid fa-tags mr-1"></i>Kelola Klasifikasi</button>':''}<button onclick="AM.report()" class="modern-button bg-dobah-400 text-cocoa-950 text-xs font-bold px-4 py-2"><i class="fa-solid fa-flag mr-1"></i>Lapor Rusak / Hilang</button></div></div>`
  +tbl(th('Tanggal','Aset','Klasifikasi','Qty','Karyawan Terkait',...(ga?['Nilai Kerugian']:[]),'Catatan','Aksi'),rows,'Belum ada laporan aset rusak atau hilang.')}
-/* kelola klasifikasi tambahan: tambah / ganti nama / hapus (yang sudah dipakai laporan tidak bisa dihapus) */
+/* kelola klasifikasi: tambah / ubah nama / hapus / pulihkan.
+   Hapus klasifikasi bawaan atau yang sudah dipakai laporan = disembunyikan dari pilihan (laporan lama tetap menampilkan namanya, bisa dipulihkan).
+   Klasifikasi buatan GA yang belum pernah dipakai dihapus permanen. */
 AM.kinds=async function(){if(!isGA())return deny();syncKinds();
- const used=id=>AM.incidents.some(i=>i.kind===id),list=appState.incidentKinds||[];
- const rows=list.map(x=>`<div class="flex items-center justify-between gap-2 p-2 rounded-lg border border-white/10 bg-[#150a05] text-xs"><span class="text-left"><b>${esc(x.label)}</b><br><span class="opacity-60">${x.effect==='Lost'?'Hilang':'Rusak'}${used(x.id)?' · dipakai laporan':''}</span></span><span class="flex gap-1"><button type="button" data-k="ren" data-id="${x.id}" class="px-2 py-1 rounded border border-white/10">Ubah nama</button>${used(x.id)?'':`<button type="button" data-k="del" data-id="${x.id}" class="px-2 py-1 rounded border border-rose-500/30 text-rose-400">Hapus</button>`}</span></div>`).join('');
- const r=await Swal.fire({title:'Kelola Klasifikasi',width:520,background:'#22120a',color:'#fcf6f0',showDenyButton:true,confirmButtonText:'Tutup',denyButtonText:'➕ Tambah baru',confirmButtonColor:'#f4a23a',
-  html:`<p class="text-left text-[11px] mb-3" style="color:#e1b782">Klasifikasi bawaan (Rusak — kelalaian karyawan, Rusak — pemakaian wajar, Hilang, Maintenance) tidak bisa diubah. Di bawah ini klasifikasi tambahan buatan GA.</p><div class="space-y-2">${rows||'<p class="text-xs opacity-60">Belum ada klasifikasi tambahan.</p>'}</div>`,
-  didOpen:p=>p.querySelectorAll('button[data-k]').forEach(b=>b.onclick=()=>{Swal.close();AM._kact=[b.dataset.k,b.dataset.id]})});
- const act=AM._kact;AM._kact=null;
- if(act){const x=list.find(z=>z.id===act[1]);if(!x)return;
-  if(act[0]==='del'){if(used(x.id))return;if(await confirmBox('Hapus klasifikasi?',`“${x.label}” akan dihapus dari pilihan.`)){appState.incidentKinds=list.filter(z=>z.id!==x.id);syncKinds();await saveMasterSettings()}}
-  else{const n=await ask('Ubah nama klasifikasi',[{k:'l',l:'Nama',v:x.label,req:1}],'Simpan',{check:o=>Object.entries(KIND).some(([id,v])=>id!==x.id&&v[1].toLowerCase()===o.l.toLowerCase())?'Nama itu sudah dipakai':''});if(n){x.label=n.l;syncKinds();await saveMasterSettings()}}
+ const used=id=>AM.incidents.some(i=>i.kind===id),custom=id=>(appState.incidentKinds||[]).some(x=>x.id===id),ids=Object.keys(KIND);
+ const rows=ids.map(id=>{const h=isHid(id),bi=!custom(id);return `<div class="flex items-center justify-between gap-2 p-2 rounded-lg border border-white/10 bg-[#150a05] text-xs ${h?'opacity-60':''}"><span class="text-left"><b>${esc(KIND[id][1])}</b><br><span class="opacity-60">${bi?'Bawaan':'Tambahan'}${used(id)?' · dipakai laporan':''}${h?' · dihapus dari pilihan':''}</span></span><span class="flex gap-1">${h?`<button type="button" data-k="res" data-id="${id}" class="px-2 py-1 rounded border border-emerald-500/30 text-emerald-400">Pulihkan</button>`:`${bi?'':`<button type="button" data-k="ren" data-id="${id}" class="px-2 py-1 rounded border border-white/10">Ubah nama</button>`}<button type="button" data-k="del" data-id="${id}" class="px-2 py-1 rounded border border-rose-500/30 text-rose-400">Hapus</button>`}</span></div>`}).join('');
+ const r=await Swal.fire({title:'Kelola Klasifikasi',width:540,background:'#22120a',color:'#fcf6f0',showDenyButton:true,confirmButtonText:'Tutup',denyButtonText:'➕ Tambah baru',confirmButtonColor:'#f4a23a',
+  html:`<p class="text-left text-[11px] mb-3" style="color:#e1b782">Klasifikasi yang dihapus hilang dari pilihan form. Laporan lama tetap menampilkan namanya dan klasifikasi bisa dipulihkan kapan saja.</p><div class="space-y-2" style="max-height:50vh;overflow:auto">${rows}</div>`,
+  didOpen:p=>p.querySelectorAll('button[data-k]').forEach(b=>b.onclick=()=>{AM._kact=[b.dataset.k,b.dataset.id];Swal.close()})});
+ const act=AM._kact,hid=()=>appState.hiddenKinds=appState.hiddenKinds||[];AM._kact=null;
+ if(act){const id=act[1],x=(appState.incidentKinds||[]).find(z=>z.id===id);
+  if(act[0]==='res'){appState.hiddenKinds=(appState.hiddenKinds||[]).filter(k=>k!==id);syncKinds();await saveMasterSettings()}
+  else if(act[0]==='del'){const left=Object.keys(KIND).filter(k=>!isHid(k)&&k!==id).length;
+   if(left<1){await Swal.fire({title:'Tidak bisa dihapus',text:'Minimal harus ada satu klasifikasi yang tersisa.',icon:'info',background:'#22120a',color:'#fcf6f0'})}
+   else if(await confirmBox('Hapus klasifikasi?',used(id)||!x?`“${KIND[id][1]}” dihapus dari pilihan. Laporan lama tetap tampil dan bisa dipulihkan.`:`“${KIND[id][1]}” akan dihapus permanen (belum pernah dipakai laporan).`)){
+    if(x&&!used(id)){appState.incidentKinds=appState.incidentKinds.filter(z=>z.id!==id)}else{hid();if(!appState.hiddenKinds.includes(id))appState.hiddenKinds.push(id)}
+    syncKinds();await saveMasterSettings()}}
+  else if(act[0]==='ren'&&x){const n=await ask('Ubah nama klasifikasi',[{k:'l',l:'Nama',v:x.label,req:1}],'Simpan',{check:o=>Object.entries(KIND).some(([k,v])=>k!==id&&v[1].toLowerCase()===o.l.toLowerCase())?'Nama itu sudah dipakai':''});if(n){x.label=n.l;syncKinds();await saveMasterSettings()}}
   incView();return AM.kinds()}
  if(r.isDenied){const n=await ask('Klasifikasi baru',[{k:'l',l:'Nama klasifikasi',req:1},{k:'e',l:'Dampak ke status aset',opts:[['Broken','Rusak'],['Lost','Hilang']]}],'Tambah',{check:o=>Object.values(KIND).some(v=>v[1].toLowerCase()===o.l.toLowerCase())?'Klasifikasi dengan nama itu sudah ada':''});
   if(n){(appState.incidentKinds=appState.incidentKinds||[]).push({id:'ik_'+Date.now().toString(36),label:n.l,effect:n.e==='Lost'?'Lost':'Broken'});syncKinds();await saveMasterSettings()}
